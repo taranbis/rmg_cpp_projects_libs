@@ -9,6 +9,10 @@
 - [ ] all relevant sorting algorithms
 - [ ] Redis type LRU cache
 
+## Deep Learning
+
+- [ ] Image Segmentation using PyTorch
+
 
 ## Computational Science and Engineering (CSE) Algorithms
 Each important lecture of my Master's degree will have an implementation here

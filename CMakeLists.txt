@@ -16,6 +16,7 @@ set(PERSONAL_BUILD_COMPUTER_GRAPHICS ON CACHE BOOL "Build computer graphics apps
 set(PERSONAL_BUILD_IMAGE_LIBRARY OFF CACHE BOOL "Building Generic Image Library" FORCE)
 set(PERSONAL_BUILD_IOT_PROJECT OFF CACHE BOOL "Build IoT Project" FORCE)
 set(PERSONAL_BUILD_SIMULATIONS ON CACHE BOOL "Build CSE Simulation Algorithms" FORCE)
+set(PERSONAL_BUILD_DEEP_LEARNING ON CACHE BOOL "Build Deep Learning Library" FORCE)
 
 add_subdirectory(vendors/googletest)
 target_compile_definitions(gtest PUBLIC GTEST_LANG_CXX20)
@@ -39,4 +40,8 @@ endif()
 
 if(UNIX AND PERSONAL_BUILD_IOT_PROJECT)
     add_subdirectory(IoT_project)
+endif()
+
+if(PERSONAL_BUILD_DEEP_LEARNING)
+    add_subdirectory(deep_learning)
 endif()

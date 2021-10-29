@@ -122,20 +122,20 @@ typedef unsigned int uintptr_t;
 #include <stdio.h>
 #include <unistd.h>
 
-int main()
-{
-    int childPid = fork();
-    if (childPid < 0) {
-        std::cout << "fork failed" << std::endl;
-    } else if (childPid == 0) {
-        // child
-        std::cout << "child" << std::endl;
-    } else {
-        // parent
-        std::cout << "parent" << std::endl;
-    }
-    return 0;
-}
+// int main()
+// {
+//     int childPid = fork();
+//     if (childPid < 0) {
+//         std::cout << "fork failed" << std::endl;
+//     } else if (childPid == 0) {
+//         // child
+//         std::cout << "child" << std::endl;
+//     } else {
+//         // parent
+//         std::cout << "parent" << std::endl;
+//     }
+//     return 0;
+// }
 
 #if defined(_WIN32) && defined(UA_DYNAMIC_LINKING)
 #ifdef UA_DYNAMIC_LINKING_EXPORT /* export dll */
