@@ -14,3 +14,5 @@ target_compile_definitions(gtest PUBLIC GTEST_LANG_CXX20)
 
 include(CTest)
 enable_testing()
+
+add_subdirectory(util)
