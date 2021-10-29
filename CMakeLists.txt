@@ -13,7 +13,9 @@ endif()
 # FORCE is passed as an argument to overwrite things stored in cache, 
 # as on Vscode we would have to rebuild this from scrath
 set(PERSONAL_BUILD_COMPUTER_GRAPHICS ON CACHE BOOL "Build computer graphics apps" FORCE)
-set(PERSONAL_BUILD_IMAGE_LIBRARY ON CACHE BOOL "Building Generic Image Library" FORCE)
+set(PERSONAL_BUILD_IMAGE_LIBRARY OFF CACHE BOOL "Building Generic Image Library" FORCE)
+set(PERSONAL_BUILD_IOT_PROJECT OFF CACHE BOOL "Build IoT Project" FORCE)
+set(PERSONAL_BUILD_SIMULATIONS ON CACHE BOOL "Build CSE Simulation Algorithms" FORCE)
 
 add_subdirectory(vendors/googletest)
 target_compile_definitions(gtest PUBLIC GTEST_LANG_CXX20)
@@ -29,4 +31,12 @@ endif()
 
 if(PERSONAL_BUILD_IMAGE_LIBRARY)
 	add_subdirectory(img_processing_library)
+endif()
+
+if(PERSONAL_BUILD_SIMULATIONS)
+	add_subdirectory(cse_algorithms)
+endif()
+
+if(UNIX AND PERSONAL_BUILD_IOT_PROJECT)
+    add_subdirectory(IoT_project)
 endif()

@@ -1,6 +1,7 @@
 
 - [ ] util.h has to be fixed
 - [ ] decode_jpg has to be fixed
+- [ ] IoT project has to be fixed
 
 ## To be implemented:
 - [ ] lexical_cast (improved boost version)
