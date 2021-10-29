@@ -16,6 +16,8 @@ set(PERSONAL_BUILD_COMPUTER_GRAPHICS ON CACHE BOOL "Build computer graphics apps
 set(PERSONAL_BUILD_IMAGE_LIBRARY OFF CACHE BOOL "Building Generic Image Library" FORCE)
 set(PERSONAL_BUILD_IOT_PROJECT OFF CACHE BOOL "Build IoT Project" FORCE)
 set(PERSONAL_BUILD_SIMULATIONS ON CACHE BOOL "Build CSE Simulation Algorithms" FORCE)
+set(PERSONAL_BUILD_GAMING ON CACHE BOOL "Building Gaming" FORCE)
+
 
 if(WIN32)
     set(BOOST_ROOT "C:/local/boost_1_73_0")
@@ -43,6 +45,10 @@ endif()
 
 if(UNIX AND PERSONAL_BUILD_IOT_PROJECT)
     add_subdirectory(IoT_project)
+endif()
+
+if(PERSONAL_BUILD_GAMING)
+	add_subdirectory(gaming)
 endif()
 
 
