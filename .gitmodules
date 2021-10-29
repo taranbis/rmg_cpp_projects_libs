@@ -1,0 +1,6 @@
+[submodule "vendors/googletest"]
+	path = vendors/googletest
+	url = https://github.com/google/googletest
+[submodule "vendors/eigen"]
+	path = vendors/eigen
+	url = https://gitlab.com/libeigen/eigen.git
