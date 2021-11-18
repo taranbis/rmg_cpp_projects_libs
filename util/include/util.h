@@ -190,6 +190,22 @@ int main()
 #define DEBLINE() std::cout << __LINE__ << std::endl;
 #define DEBFILE() std::cout << __FILE__ << std::endl;
 
+#define PRINT_TID()                                       \
+    std::thread::id this_id = std::this_thread::get_id(); \
+    std::cout << "thread ID is: " << this_id << "; ";
+
+#define DEB_FUNCTION()           \
+    std::string func = __func__; \
+    std::cout << "Function " << func << " called\n";
+
+#define PAUSE_THREAD(x)                                        \
+    static int counter = 0;                                    \
+    counter++;                                                 \
+    if (counter == x) {                                        \
+        std::this_thread::sleep_for(std::chrono::seconds(10)); \
+        counter = 0;                                           \
+    }
+
 #define WORD_SIZE sizeof(void *)
 
 #if (personal_OS == 1)
@@ -209,14 +225,6 @@ int main()
 #define persLogBinary(x)             \
     std::bitset<sizeof(x) * 8> y(x); \
     std::cout << #x << " =  " << y << "; line: " << __LINE__ << "; file: " << __FILENAME__ << std::endl
-
-#define PAUSE_THREAD(x)                                        \
-    static int counter = 0;                                    \
-    counter++;                                                 \
-    if (counter == x) {                                        \
-        std::this_thread::sleep_for(std::chrono::seconds(10)); \
-        counter = 0;                                           \
-    }
 
 namespace personal
 {
