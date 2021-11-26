@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(rmglib VERSION 1.0.0)
 
+# set(CMAKE_BUILD_TYPE Debug)
+
 if(WIN32)
     set(LIB_PREFIX "")
     set(LIB_SUFFIX ".dll")
@@ -13,7 +15,7 @@ endif()
 # FORCE is passed as an argument to overwrite things stored in cache, 
 # as on Vscode we would have to rebuild this from scrath
 set(PERSONAL_BUILD_COMPUTER_GRAPHICS ON CACHE BOOL "Build computer graphics apps" FORCE)
-set(PERSONAL_BUILD_IMAGE_LIBRARY OFF CACHE BOOL "Building Generic Image Library" FORCE)
+set(PERSONAL_BUILD_IMAGE_LIBRARY ON CACHE BOOL "Building Generic Image Library" FORCE)
 set(PERSONAL_BUILD_IOT_PROJECT OFF CACHE BOOL "Build IoT Project" FORCE)
 set(PERSONAL_BUILD_SIMULATIONS ON CACHE BOOL "Build CSE Simulation Algorithms" FORCE)
 
@@ -28,17 +30,18 @@ add_subdirectory(util)
 include(CTest)
 enable_testing()
 
+add_subdirectory(test)
 
 if(PERSONAL_BUILD_COMPUTER_GRAPHICS)
     add_subdirectory(computer_graphics)
 endif()
 
 if(PERSONAL_BUILD_IMAGE_LIBRARY)
-	add_subdirectory(img_processing_library)
+    add_subdirectory(img_processing_library)
 endif()
 
 if(PERSONAL_BUILD_SIMULATIONS)
-	add_subdirectory(cse_algorithms)
+    add_subdirectory(cse_algorithms)
 endif()
 
 if(UNIX AND PERSONAL_BUILD_IOT_PROJECT)

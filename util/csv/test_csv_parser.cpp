@@ -12,8 +12,7 @@ int main()
 {
     io::CSVParser csv("NVDA.csv");
 
-    //Columns to be read can also be specified like this: csv << "Date" << "Open"  << "High" 
-
+    // Columns to be read can also be specified like this: csv << "Date" << "Open"  << "High"
     std::vector<std::string> stockDates;
     std::vector<double>      openPrices;
     std::vector<double>      highPrices;
@@ -26,9 +25,9 @@ int main()
 
     csv >> stockDates >> openPrices >> highPrices >> lowPrices >> closePrices;
 
-    for (auto &price : closePrices) { price += 1.1; }
+    for (auto& price : closePrices) { price += 1.1; }
 
-    for (const auto &price : closePrices) { std::cout << price << " "; }
+    for (const auto& price : closePrices) { std::cout << price << " "; }
     std::cout << std::endl;
 
     return 0;

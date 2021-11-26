@@ -1,5 +1,5 @@
-#ifndef HITABLELIST_HEADER_HPP
-#define HITABLELIST_HEADER_HPP 1
+#ifndef _HITABLELIST_HEADER_HPP_
+#define _HITABLELIST_HEADER_HPP_ 1
 
 #include "hitable.hpp"
 
@@ -10,37 +10,28 @@ private:
     hitable** list;
 
 public:
-    __device__ hitable_list()
-    {
-    }
+    __device__ hitable_list() {}
     __device__ hitable_list(hitable** l, int n)
     {
-        list      = l;
+        list = l;
         list_size = n;
     }
-    __device__ ~hitable_list()
-    {
-    }
+    __device__ ~hitable_list() {}
 };
 
-__device__ bool hitable_list::hit(const ray&  r,
-                                  float       t_mim,
-                                  float       t_max,
-                                  hit_record& rec) const
+__device__ bool hitable_list::hit(const ray& r, float t_mim, float t_max, hit_record& rec) const
 {
     hit_record temp_rec;
-    bool       hit_anything   = false;
+    bool       hit_anything = false;
     float      closest_so_far = t_max;
-    for (int i = 0; i < list_size; ++i)
-    {
-        if (list[i]->hit(r, t_min, closest_so_far, temp_rec))
-        {
-            hit_anything   = true;
+    for (int i = 0; i < list_size; ++i) {
+        if (list[i]->hit(r, t_min, closest_so_far, temp_rec)) {
+            hit_anything = true;
             closest_so_far = temp_rec.t;
-            rec            = temp_rec;
+            rec = temp_rec;
         }
     }
     return hit_anything;
 }
 
-#endif // !HITABLELIST_HEADER_HPP
+#endif // !_HITABLELIST_HEADER_HPP_

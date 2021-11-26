@@ -1,9 +1,9 @@
+#include <memory>
+#include <random>
+
 #include "Communicator.hpp"
 #include "Forklift.hpp"
 #include "Sensor.hpp"
-
-#include <memory>
-#include <random>
 
 // TODO: select different types of maps: eg anywhere in a square, lines (like a grid)
 /**
@@ -31,9 +31,7 @@ public:
 
     std::atomic<bool> stop{false};
 
-    Warehouse() : _stopTime(2, 5), _positions(0, 300)
-    {
-    }
+    Warehouse() : _stopTime(2, 5), _positions(0, 300) {}
 
     /**
      * The warehouse can operate different automous devices: Forklifts, Cranes etc.
@@ -45,20 +43,16 @@ public:
     {
         /* We want to make sure the device is still available */
         std::shared_ptr<Device> device;
-        if (device = devicePtr.lock())
-        {
+        if (device = devicePtr.lock()) {
             std::cout << "Device availble" << std::endl;
-        }
-        else
-        {
+        } else {
             std::cout << "Device not available anymore!" << std::endl;
         }
 
-        while (!stop.load(std::memory_order_relaxed))
-        {
+        while (!stop.load(std::memory_order_relaxed)) {
             double xPosition = _positions(_mt);
             double yPosition = _positions(_mt);
-            int    stopTime  = _stopTime(_mt);
+            int    stopTime = _stopTime(_mt);
 
             DEB(xPosition);
             DEB(yPosition);
@@ -71,9 +65,7 @@ public:
         }
     }
 
-    void ChangeMap()
-    {
-    }
+    void ChangeMap() {}
 
     void EndWork()
     {
@@ -94,8 +86,7 @@ int main()
     uint32_t                          id = 3423;
     std::shared_ptr<Forklift<double>> forklift = std::make_shared<Forklift<double>>(id);
 
-    std::shared_ptr<Communicator> comm =
-        std::make_shared<Communicator>("tcp://localhost:1883");
+    std::shared_ptr<Communicator> comm = std::make_shared<Communicator>("tcp://localhost:1883");
 
     comm->SetDefaultOptions("Sensor Disconnected");
     comm->Connect();
@@ -114,8 +105,7 @@ int main()
     Warehouse warehouse;
 
     std::thread inputThread([&] {
-        if (std::cin.get() == 'n')
-        {
+        if (std::cin.get() == 'n') {
             warehouse.EndWork();
             positionSensor.Stop();
             comm->Disconnect("Sensor Disconnected");

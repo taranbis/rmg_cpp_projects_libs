@@ -7,12 +7,9 @@
 class TCPConnection
 {
 public:
-    TCPConnection(TCPConnHandler &tcpHandler, TCPConnInfo data) : 
-        tcpHandler_(tcpHandler), 
-        connData_(data)
-    {}
+    TCPConnection(TCPConnHandler& tcpHandler, TCPConnInfo data) : tcpHandler_(tcpHandler), connData_(data) {}
 
-    bool write(const std::string &msg)
+    bool write(const std::string& msg)
     {
         if (tcpHandler_.writeToSocket(&connData_, msg) < 0) {
             std::cerr << "send failed";
@@ -24,7 +21,7 @@ public:
     // std::string read() { tcpHandler_.readFromSocket(); }
 
 private:
-    TCPConnHandler &tcpHandler_;
+    TCPConnHandler& tcpHandler_;
 
     TCPConnInfo connData_;
 };

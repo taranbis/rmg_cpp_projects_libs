@@ -7,8 +7,8 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
-static constexpr std::size_t N         = 256;
-static constexpr std::size_t SCRWidth  = N;
+static constexpr std::size_t N = 256;
+static constexpr std::size_t SCRWidth = N;
 static constexpr std::size_t SCRHeight = N;
 std::unique_ptr<Fluid<N>>    globalFluid;
 
@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 {
     double diffusion = 0.02;
     double viscosity = 0.02;
-    double dt        = 0.02;
+    double dt = 0.02;
 
     // double diffusion = 2;
     // double viscosity = 2;
@@ -27,47 +27,33 @@ int main(int argc, char* argv[])
 
     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_Window*   window = SDL_CreateWindow("Fluid Simulation",
-                                          SDL_WINDOWPOS_UNDEFINED,
-                                          SDL_WINDOWPOS_UNDEFINED,
-                                          SCRWidth,
-                                          SCRHeight,
-                                          SDL_WINDOW_SHOWN);
-    SDL_Renderer* renderer =
-        SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    SDL_Texture* texture = SDL_CreateTexture(renderer,
-                                             SDL_PIXELFORMAT_ARGB8888,
-                                             SDL_TEXTUREACCESS_STREAMING,
-                                             SCRWidth,
-                                             SCRHeight);
+    SDL_Window*   window = SDL_CreateWindow("Fluid Simulation", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                          SCRWidth, SCRHeight, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Texture*  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                             SCRWidth, SCRHeight);
 
-    int  mouseX     = -1;
-    int  mouseY     = -1;
+    int  mouseX = -1;
+    int  mouseY = -1;
     bool mouseClick = false;
-    int  running    = 1;
+    int  running = 1;
 
     int counter = 0;
 
     unsigned char*             lockedPixels = nullptr;
-    int                        pitch        = 0;
+    int                        pitch = 0;
     std::vector<unsigned char> pixels(SCRWidth * SCRHeight * 4, 0);
 
-    while (running)
-    {
-        for (int i = 0; i < N; ++i)
-        {
-            for (int j = 0; j < N; ++j)
-            {
+    while (running) {
+        for (int i = 0; i < N; ++i) {
+            for (int j = 0; j < N; ++j) {
                 const unsigned int offset = (SCRWidth * 4 * i) + j * 4;
 
                 uint32_t tmp;
 
-                if (globalFluid->_density[i][j] > 255)
-                {
+                if (globalFluid->_density[i][j] > 255) {
                     tmp = 255;
-                }
-                else
-                {
+                } else {
                     tmp = (uint32_t)globalFluid->_density[i][j];
                 }
 
@@ -75,8 +61,8 @@ int main(int argc, char* argv[])
                 pixels[offset + 0] = (uint32_t)tmp % 256; // b
                 pixels[offset + 1] = (uint32_t)tmp % 256; // g
                 pixels[offset + 2] = (uint32_t)tmp % 256; // r
-                pixels[offset + 3] = SDL_ALPHA_OPAQUE; // a SDL_ALPHA_OPAQUE is
-                                                       // now considered opaque.
+                pixels[offset + 3] = SDL_ALPHA_OPAQUE;    // a SDL_ALPHA_OPAQUE is
+                                                          // now considered opaque.
 
                 // DEB(offset);
                 // DEB(pixels[offset + 0]);
@@ -85,25 +71,17 @@ int main(int argc, char* argv[])
                 // NEWLINE();
             }
         }
-        SDL_LockTexture(texture,
-                        NULL,
-                        reinterpret_cast<void**>(&lockedPixels),
-                        &pitch);
+        SDL_LockTexture(texture, NULL, reinterpret_cast<void**>(&lockedPixels), &pitch);
         std::memcpy(lockedPixels, pixels.data(), pixels.size());
         SDL_UnlockTexture(texture);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
 
         SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
-            case SDL_QUIT:
-                running = 0;
-                break;
-            case SDL_MOUSEMOTION:
-            {
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_QUIT: running = 0; break;
+            case SDL_MOUSEMOTION: {
                 int amtY = mouseX - event.motion.x;
                 int amtX = mouseY - event.motion.y;
                 // DEB_SHORT(amtY);
@@ -114,10 +92,7 @@ int main(int argc, char* argv[])
                 mouseY = event.motion.x;
 
                 globalFluid->AddVelocity(mouseX, mouseY, amtX, amtY);
-                if (mouseClick)
-                {
-                    globalFluid->AddDye(mouseX, mouseY, 10000);
-                }
+                if (mouseClick) { globalFluid->AddDye(mouseX, mouseY, 10000); }
                 globalFluid->Step();
                 break;
             }
