@@ -9,7 +9,7 @@
 int main()
 {
     TCPConnHandler handler;
-    TCPServer server(handler);
+    TCPServer      server(handler);
     server.start("127.0.0.1", 12301);
 
     handler.newConnection.connect([&server](TCPConnInfo data) {

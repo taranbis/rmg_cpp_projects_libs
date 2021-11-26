@@ -8,13 +8,7 @@
 #include <thread>
 #include <vector>
 
-#define DEB(x) std::cout << #x << " =  " << x << "\t"
-#define DEB_SHORT(x) std::cout << std::setw(25) << #x << " = " << std::setw(16) << x << ";           "
-#define NEWLINE() std::cout << std::endl
-
-#define DEBLINE() std::cout << __LINE__ << std::endl;
-#define DEBFILE() std::cout << __FILE__ << std::endl;
-#define DEBFUNC() std::cout << __func__ << std::endl;
+#include "util.hpp"
 
 // 20 was in the original paper
 const int iter = 15;
@@ -24,7 +18,7 @@ template <int N = 512>
 class Fluid
 {
 public:           // TODO: make setters and getters for this
-    int _size;    // size = N
+    int    _size; // size = N
     double _dt;   // length of the timestamp
     double _diff; // amount of diffusion
     double _visc; // viscosity
@@ -37,9 +31,9 @@ public:           // TODO: make setters and getters for this
 
     // typedef std::array<std::array<double, N + 1>, N + 1> ArrayType;
     // typedef ArrayType&                                   ArrayReference;
-    typedef std::vector<double> Vector;
+    typedef std::vector<double>              Vector;
     typedef std::vector<std::vector<double>> Matrix;
-    typedef Matrix &MatrixReference;
+    typedef Matrix&                          MatrixReference;
 
     // double* _s;       // 2D array
     Matrix _density;
@@ -103,8 +97,7 @@ public:
         for (int k = 0; k < iter; k++) {
             for (int i = 1; i < N; i++) {
                 for (int j = 1; j < N; j++) {
-                    arr[i][j] = (arr[i][j] +
-                                 a * (arr[i - 1][j] + arr[i + 1][j] + arr[i][j + 1] + arr[i][j - 1])) /
+                    arr[i][j] = (arr[i][j] + a * (arr[i - 1][j] + arr[i + 1][j] + arr[i][j + 1] + arr[i][j - 1])) /
                                 (1 + 4 * a);
                 }
             }
@@ -129,7 +122,7 @@ public:
      */
     void Advect(int b, MatrixReference arr)
     {
-        int i = 1, j = 1, i0 = 0, j0 = 0, i1 = 0, j1 = 0, s1 = 0, s0 = 0, k1 = 0, k0 = 0;
+        int    i = 1, j = 1, i0 = 0, j0 = 0, i1 = 0, j1 = 0, s1 = 0, s0 = 0, k1 = 0, k0 = 0;
         double x = 0;
         double y = 0;
         Matrix arr_new(N + 1, Vector(N + 1, 0));

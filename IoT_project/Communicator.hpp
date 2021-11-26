@@ -2,10 +2,10 @@
 #define COMMUNICATOR_HEADER_HPP 1
 #pragma once
 
+#include <iostream>
+
 #include "mqtt/async_client.h"
 #include "mqtt/topic.h"
-
-#include <iostream>
 
 // TODO: maybe use a flat_hash_map for topics
 /**
@@ -22,8 +22,8 @@ private:
     // 0 means messages are received at most once
     // 1 means messages are received at least once
     // 2 means messages are received exactly once
-    /*const*/ int  _qoS     = 1;
-    /*const*/ bool _noLocal = true; // we don't want to receive our own messages
+    /*const*/ int  _qoS = 1;
+    /*const*/ bool _noLocal = true;     // we don't want to receive our own messages
     /*const*/ bool _retainData = false; // neither to retain data
 
     /* options on how to connect to server */
@@ -38,7 +38,7 @@ public:
     Communicator() = default;
 
     Communicator(const std::string& brokerAddress)
-        : _brokerAddress(brokerAddress), _client(brokerAddress, ""), _topics()
+            : _brokerAddress(brokerAddress), _client(brokerAddress, ""), _topics()
     {
     }
 
@@ -65,53 +65,38 @@ public:
 
     void Connect()
     {
-        _client.set_connected_handler([](const std::string&) {
-            std::cout << "Connection to broker successful!" << std::endl;
-        });
+        _client.set_connected_handler(
+                    [](const std::string&) { std::cout << "Connection to broker successful!" << std::endl; });
 
         _client.set_connection_lost_handler([](const std::string&) {
             std::cout << "Connection was lost!" << std::endl;
             exit(2);
         });
 
-        try
-        {
+        try {
             _client.connect(_connOpts)->wait();
-        }
-        catch (const mqtt::exception& ex)
-        {
+        } catch (const mqtt::exception& ex) {
             std::cerr << "Cannot connect. Reason: " << ex.what() << std::endl;
-        }
-        catch (...)
-        {
+        } catch (...) {
             std::cerr << "Some error" << std::endl;
         }
     }
 
     void AddTopic(const std::string& topicName)
     {
-        if (topicName.empty())
-            return;
+        if (topicName.empty()) return;
 
         auto it = _topics.find(topicName);
-        if (it == _topics.end())
-        {
-            it = _topics
-                     .emplace(topicName, mqtt::topic(_client, topicName, _noLocal))
-                     .first;
+        if (it == _topics.end()) {
+            it = _topics.emplace(topicName, mqtt::topic(_client, topicName, _noLocal)).first;
         }
 
-        try
-        {
+        try {
             auto subOpts = mqtt::subscribe_options(_noLocal);
             it->second.subscribe(subOpts)->wait();
-        }
-        catch (const mqtt::exception& ex)
-        {
+        } catch (const mqtt::exception& ex) {
             std::cerr << "Cannot subscribe. Reason: " << ex.what() << std::endl;
-        }
-        catch (...)
-        {
+        } catch (...) {
             std::cerr << "Some error" << std::endl;
         }
     }
@@ -136,10 +121,7 @@ public:
     void SendMessage(std::string&& payload, std::string topicName)
     {
         /* Check if client is still connected as this is called separately */
-        if (!_client.is_connected())
-        {
-            return;
-        }
+        if (!_client.is_connected()) { return; }
 
         /**
          * We don't want to send messages on any topic
@@ -147,12 +129,9 @@ public:
          * messages only on registered topics
          */
         auto it = _topics.find(topicName);
-        if (it != _topics.end())
-        {
+        if (it != _topics.end()) {
             it->second.publish(std::move(payload));
-        }
-        else
-        {
+        } else {
             throw std::runtime_error("Topic is not registered");
         }
     }
@@ -162,14 +141,11 @@ public:
     {
         _client.start_consuming();
 
-        while (true)
-        {
+        while (true) {
             auto msg = _client.consume_message();
-            if (!msg)
-                continue;
+            if (!msg) continue;
 
-            if (msg->to_string() == "Sensor Disconnected")
-            {
+            if (msg->to_string() == "Sensor Disconnected") {
                 std::cout << "Exit command received" << std::endl;
                 Disconnect();
                 break;
@@ -182,27 +158,19 @@ public:
     void Disconnect(const std::string& msg)
     {
         /* No more data comes */
-        for (auto& topic : _topics)
-        {
-            topic.second.publish(msg);
-        }
+        for (auto& topic : _topics) { topic.second.publish(msg); }
 
         Disconnect();
     }
 
     void Disconnect()
     {
-        try
-        {
+        try {
             _client.disconnect()->wait();
             std::cout << "Disconnected" << std::endl;
-        }
-        catch (const mqtt::exception& ex)
-        {
+        } catch (const mqtt::exception& ex) {
             std::cerr << "Cannot disconnect. Reason: " << ex.what() << std::endl;
-        }
-        catch (...)
-        {
+        } catch (...) {
             std::cerr << "Some error" << std::endl;
         }
     }

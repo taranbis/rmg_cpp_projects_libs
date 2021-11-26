@@ -7,12 +7,12 @@
 class TCPServer
 {
 public:
-    TCPConnHandler &tcpHandler_;
-    TCPConnInfo data_;
+    TCPConnHandler& tcpHandler_;
+    TCPConnInfo     data_;
 
 public:
-    TCPServer(TCPConnHandler &tcpHandler) : tcpHandler_(tcpHandler) {}
-    void start(const std::string &sourceAddress, uint16_t sourcePort)
+    TCPServer(TCPConnHandler& tcpHandler) : tcpHandler_(tcpHandler) {}
+    void start(const std::string& sourceAddress, uint16_t sourcePort)
     {
         // return startListen(sourceAddress, sourcePort);
         data_ = tcpHandler_.openListenSocket(sourceAddress, sourcePort);

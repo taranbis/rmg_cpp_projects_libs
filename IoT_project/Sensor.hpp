@@ -2,11 +2,11 @@
 #define SENSOR_HEADER_HPP 1
 #pragma once
 
-#include "Forklift.hpp"
-
 #include <fstream>
 #include <random>
 #include <thread>
+
+#include "Forklift.hpp"
 
 /**
  * @class Sensor
@@ -44,9 +44,8 @@ private:
     std::shared_ptr<Communicator> _comm;
 
 public:
-    Sensor(std::shared_ptr<Forklift<T>> forkliftPtr,
-           const std::string&           fileName = {"SensorData.txt"})
-        : _forkliftPtr(forkliftPtr), _fileName(fileName), _normDist(0.0, measureVariance)
+    Sensor(std::shared_ptr<Forklift<T>> forkliftPtr, const std::string& fileName = {"SensorData.txt"})
+            : _forkliftPtr(forkliftPtr), _fileName(fileName), _normDist(0.0, measureVariance)
     {
         // TODO: I don't want to check everywhere that the pointer is not null
         // if (_obj = forklift.lock())
@@ -81,30 +80,27 @@ public:
     void Start()
     {
         _workThread = std::thread([&] {
-            if (_outputToFile)
-            {
+            if (_outputToFile) {
                 /* if it already exists, delete file */
                 std::remove(_fileName.c_str());
             }
             std::ofstream outputFile(_fileName);
 
-            auto   currTime  = std::chrono::high_resolution_clock::now();
-            T timestamp = -1;
+            auto currTime = std::chrono::high_resolution_clock::now();
+            T    timestamp = -1;
 
-            while (true)
-            {
+            while (true) {
                 std::this_thread::sleep_for(std::chrono::milliseconds((int)frequency));
 
                 /* create the payload from here */
                 std::string payload;
                 timestamp = ((T)std::chrono::duration_cast<std::chrono::milliseconds>(
-                                 std::chrono::high_resolution_clock::now() - currTime)
-                                 .count()) /
+                                         std::chrono::high_resolution_clock::now() - currTime)
+                                         .count()) /
                             1000;
 
                 T x = _forkliftPtr->GetXPosition(), y = _forkliftPtr->GetYPosition();
-                T x_meas = MeasureXPosition(), y_meas = MeasureYPosition(),
-                       z_meas = 0;
+                T x_meas = MeasureXPosition(), y_meas = MeasureYPosition(), z_meas = 0;
                 T Vx = _forkliftPtr->GetXSpeed(), Vy = _forkliftPtr->GetYSpeed();
 
                 payload += std::to_string(timestamp) + " ";
@@ -112,8 +108,7 @@ public:
                 payload += std::to_string(y_meas) + " ";
                 payload += std::to_string(y_meas);
 
-                if (_outputToFile)
-                {
+                if (_outputToFile) {
                     outputFile << "Time: " << timestamp << " ";
                     outputFile << "x: " << x << " ";
                     outputFile << "y: " << y << " ";
@@ -126,14 +121,10 @@ public:
 
                 /* send message straight from sensor */
                 // TODO: use different topics. 1 for x, 1 for y and 1 for timestamp
-                _comm->SendMessage(
-                    std::move(payload),
-                    "/localizationData/" + std::to_string(_forkliftPtr->GetTag()));
+                _comm->SendMessage(std::move(payload),
+                                   "/localizationData/" + std::to_string(_forkliftPtr->GetTag()));
 
-                if (_stop.load(std::memory_order_relaxed))
-                {
-                    break;
-                }
+                if (_stop.load(std::memory_order_relaxed)) { break; }
             }
         });
         _workThread.detach();
