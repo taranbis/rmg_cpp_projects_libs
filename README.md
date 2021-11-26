@@ -10,6 +10,15 @@
 - [ ] all relevant sorting algorithms
 - [ ] Redis type LRU cache
 
+## Deep Learning
+
+- [ ] Image Segmentation using PyTorch
+- [ ] image classification projects
+
+- [Data Preprocessing And Visualization In C++](https://towardsdatascience.com/data-preprocessing-and-visualization-in-c-6d97ed236f3b)
+
+- [Machine Learning Libraries for C++](https://www.analyticsvidhya.com/blog/2020/04/machine-learning-using-c-linear-logistic-regression/?utm_source=blog&utm_medium=introduction-machine-learning-libraries-c)
+
 
 ## Computational Science and Engineering (CSE) Algorithms
 Each important lecture of my Master's degree will have an implementation here

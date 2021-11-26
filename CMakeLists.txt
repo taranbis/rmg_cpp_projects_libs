@@ -19,7 +19,7 @@ set(PERSONAL_BUILD_IMAGE_LIBRARY ON CACHE BOOL "Building Generic Image Library" 
 set(PERSONAL_BUILD_IOT_PROJECT OFF CACHE BOOL "Build IoT Project" FORCE)
 set(PERSONAL_BUILD_SIMULATIONS ON CACHE BOOL "Build CSE Simulation Algorithms" FORCE)
 set(PERSONAL_BUILD_GAMING ON CACHE BOOL "Building Gaming" FORCE)
-
+set(PERSONAL_BUILD_DEEP_LEARNING ON CACHE BOOL "Build Deep Learning Library" FORCE)
 
 if(WIN32)
     set(BOOST_ROOT "C:/local/boost_1_73_0")
@@ -51,9 +51,12 @@ if(UNIX AND PERSONAL_BUILD_IOT_PROJECT)
 endif()
 
 if(PERSONAL_BUILD_GAMING)
-	add_subdirectory(gaming)
+    add_subdirectory(gaming)
 endif()
 
+if(PERSONAL_BUILD_DEEP_LEARNING)
+    add_subdirectory(deep_learning)
+endif()
 
 # set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 # set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
