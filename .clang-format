@@ -3,7 +3,7 @@ AccessModifierOffset: -4
 AlignEscapedNewlines: Left
 AlignTrailingComments: true
 AlignConsecutiveMacros: false
-AlignConsecutiveDeclarations: true
+AlignConsecutiveDeclarations: false
 AlignConsecutiveAssignments: false
 AlignAfterOpenBracket: Align
 AlignOperands: true

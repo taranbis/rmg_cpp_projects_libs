@@ -33,6 +33,7 @@ include(CTest)
 enable_testing()
 
 add_subdirectory(test)
+add_subdirectory(allocator)
 
 if(PERSONAL_BUILD_COMPUTER_GRAPHICS)
     add_subdirectory(computer_graphics)
