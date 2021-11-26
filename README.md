@@ -1,6 +1,6 @@
 
-- [ ] util.h has to be fixed
-- [ ] decode_jpg has to be fixed
+- [x] util.h has to be fixed
+- [x] decode_jpg has to be fixed
 - [ ] IoT project has to be fixed
 - [ ] remove unneccessary files in CFD simulation
 - [ ] finish ray_tracing using cuda or look if it ok
