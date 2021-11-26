@@ -5,7 +5,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "util.h"
+#include "util.hpp"
 
 void drawVectorToScreen(const std::vector<int> &vec, sf::RenderWindow &window)
 {
@@ -68,6 +68,6 @@ int main()
         }
     }
 
-    personal::PrintVector(vec);
+    rmg::PrintVector(vec);
     return 0;
 }
