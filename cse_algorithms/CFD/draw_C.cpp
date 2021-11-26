@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <graphics.h>
 
-static constexpr std::size_t N         = 512;
-static constexpr std::size_t SCRWidth  = N;
+static constexpr std::size_t N = 512;
+static constexpr std::size_t SCRWidth = N;
 static constexpr std::size_t SCRHeight = N;
 std::unique_ptr<Fluid<N>>    globalFluid;
 

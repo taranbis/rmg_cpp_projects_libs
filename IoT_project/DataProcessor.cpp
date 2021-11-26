@@ -1,9 +1,10 @@
+#include <fstream>
+
+#include <Eigen/Dense>
+
 #include "Communicator.hpp"
 #include "KalmanFilter.hpp"
 #include "Sensor.hpp"
-
-#include <Eigen/Dense>
-#include <fstream>
 
 template <std::size_t S>
 using Vector = typename Eigen::Vector<double, S>;
@@ -41,9 +42,9 @@ class DataProcessor
 public:
     /* or maybe put N, M, accVariance as parameters for process */
     DataProcessor(T accVariance = 0.5, const std::string& fileName = {"ProcessedData.txt"})
-        : _accVariance(accVariance), _fileName(fileName), outputFile(_fileName)
+            : _accVariance(accVariance), _fileName(fileName), outputFile(_fileName)
     {
-        const T measureVariance = Sensor::measureVariance * Sensor::measureVariance;
+        const T                  measureVariance = Sensor::measureVariance * Sensor::measureVariance;
         Matrix<numMeas, numMeas> R{{measureVariance, 0}, {0, measureVariance}};
 
         /* Set initial boundary values */
@@ -61,8 +62,7 @@ public:
 
         T x = 0, y = 0, z = 0, timestamp = 0;
 
-        if (ss >> timestamp >> x >> y >> z)
-        {
+        if (ss >> timestamp >> x >> y >> z) {
             measured[0] = x;
             measured[1] = y;
         }
@@ -80,8 +80,7 @@ public:
         DEB(res[3]);
         NEWLINE();
 
-        if (_outputToFile)
-        {
+        if (_outputToFile) {
             // std::cout << "Real x: \n" << x << std::endl;
             // std::cout << "measured: \n" << measured << std::endl;
             outputFile << "Time: " << timestamp << " ";
@@ -95,8 +94,7 @@ public:
 };
 
 template <typename T>
-using DataProcessorType =
-    DataProcessor<T, KalmanFilter<T, 4, 2>, Sensor<double, Communicator>, 4, 2>;
+using DataProcessorType = DataProcessor<T, KalmanFilter<T, 4, 2>, Sensor<double, Communicator>, 4, 2>;
 
 int main()
 {
@@ -115,10 +113,9 @@ int main()
     // comm.AddTopic(std::to_string(id) + "/timestamp");
 
     // TODO: DELETE ME
-    comm.AddTopic("/localizationData/" + std::to_string(id)); 
+    comm.AddTopic("/localizationData/" + std::to_string(id));
 
-    std::shared_ptr<DataProcessorType<double>> processor =
-        std::make_shared<DataProcessorType<double>>();
+    std::shared_ptr<DataProcessorType<double>> processor = std::make_shared<DataProcessorType<double>>();
 
     comm.ProcessMessages(processor);
 

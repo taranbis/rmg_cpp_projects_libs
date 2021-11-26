@@ -1,5 +1,5 @@
-#ifndef VEC3_HEADER_H
-#define VEC3_HEADER_H 1
+#ifndef _VEC3_HEADER_HPP_
+#define _VEC3_HEADER_HPP_ 1
 #pragma once
 
 #include <iostream>
@@ -17,9 +17,7 @@ class vec3
     float e[3];
 
 public:
-    __host__ __device__ vec3()
-    {
-    }
+    __host__ __device__ vec3() {}
     __host__ __device__ vec3(float e0, float e1, float e2)
     {
         e[0] = e0;
@@ -219,8 +217,7 @@ __host__ __device__ inline float dot(const vec3& v1, const vec3& v2)
 
 __host__ __device__ inline vec3 cross(const vec3& v1, const vec3& v2)
 {
-    return vec3((v1.y() * v2.z() - v1.z() * v2.y()),
-                (-(v1.x() * v2.z() - v1.z() * v2.z())),
+    return vec3((v1.y() * v2.z() - v1.z() * v2.y()), (-(v1.x() * v2.z() - v1.z() * v2.z())),
                 (v1.x() * v2.y() - v1.y() * v2.x()));
 }
 
@@ -229,4 +226,4 @@ __host__ __device__ inline vec3 unit_vector(vec3 v)
     return v / v.length();
 }
 
-#endif
+#endif //!_VEC3_HEADER_HPP_

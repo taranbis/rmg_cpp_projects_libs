@@ -3,6 +3,7 @@
 - [ ] decode_jpg has to be fixed
 - [ ] IoT project has to be fixed
 - [ ] remove unneccessary files in CFD simulation
+- [ ] finish ray_tracing using cuda or look if it ok
 
 ## To be implemented:
 - [ ] lexical_cast (improved boost version)
@@ -29,6 +30,12 @@ Each important lecture of my Master's degree will have an implementation here
 - [ ] N-body simulation (Scientific Computing II)
 - [ ] Parallel LU Decomposition (Parallel Numerics)
 
+### Computer Graphics
+
+#### Path Tracer Algorithm
+
+- [ ] ray tracing using Cuda (in progress); found in [ray_tracing](ray_tracing)
+- [ ] Triangle Rasterization; found in [TriangleRasterization](TriangleRasterization): [Triangle Rasterization Paper](https://joshbeam.com/articles/triangle_rasterization/)
 
 ## Allocator
 
@@ -57,3 +64,19 @@ found in [FastHashMap](FastHashMap)
 - [ ] C++ LRU in-memory cache implementation. Idea from [here](https://github.com/warxander/lruc)
 - [ ] Snake Game (Simple + maybe add features) + GUI
 - [ ] Create a basic web server (dedicated old machine). Uses: a cloud storage unit by adding a few hard drives
+
+- [ ] Implementation of a profiling framework using instrumentation
+
+I would have a lot to learn of profiling and how functions are called and how to call run-time instrumentation so it is worth a shot.
+
+An implementation similar to what I am looking for is [easy_profiler](https://github.com/yse/easy_profiler) + some important files from there:
+- [profiler.cpp](https://github.com/yse/easy_profiler/blob/develop/easy_profiler_core/profiler.cpp)
+- [current_time.h](https://github.com/yse/easy_profiler/blob/develop/easy_profiler_core/current_time.h)
+
+
+#### Useful Documentation
+- [Modern C++ features: C++20/17/14/11](https://github.com/AnthonyCalandra/modern-cpp-features)
+
+#### Development
+- CMake > 3.8
+- C++11 / C99 Compiler (go with C++17)

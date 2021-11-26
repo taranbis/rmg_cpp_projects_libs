@@ -4,9 +4,9 @@
 #include <iostream>
 #include <fstream>
 
-#include <util.h>
+#include <util.hpp>
 
-void io::generateMockData(CSVParser &parser)
+void io::generateMockData(CSVParser& parser)
 {
     parser.columns_[0].emplace_back("1999-01-22");
     parser.columns_[0].emplace_back("1999-01-25");
@@ -17,7 +17,7 @@ void io::generateMockData(CSVParser &parser)
     parser.columns_[1].emplace_back("1.833333");
 }
 
-io::CSVParser::CSVParser(const std::string &fileName, std::string delimiter)
+io::CSVParser::CSVParser(const std::string& fileName, std::string delimiter)
         : file_(fileName), delimiter_(delimiter)
 {
 }
@@ -45,7 +45,7 @@ void io::CSVParser::parseFile()
     while (file_.good()) {
         std::getline(file_, line);
 
-        std::size_t pos   = 0;
+        std::size_t pos = 0;
         std::size_t index = 0;
         std::string value;
         while ((pos = line.find(delimiter_)) != std::string::npos) {
@@ -57,7 +57,7 @@ void io::CSVParser::parseFile()
     }
 }
 
-io::CSVParser &io::CSVParser::operator<<(const std::string &columnName)
+io::CSVParser& io::CSVParser::operator<<(const std::string& columnName)
 {
     columns_.emplace_back(std::vector<std::string>{});
     columnIdx_.emplace(columnName, inputIdx_);
@@ -65,7 +65,7 @@ io::CSVParser &io::CSVParser::operator<<(const std::string &columnName)
     return *this;
 }
 
-io::CSVParser &io::CSVParser::operator<<(std::string &&columnName)
+io::CSVParser& io::CSVParser::operator<<(std::string&& columnName)
 {
     columns_.emplace_back(std::vector<std::string>{});
     columnIdx_.emplace(std::move(columnName), inputIdx_);

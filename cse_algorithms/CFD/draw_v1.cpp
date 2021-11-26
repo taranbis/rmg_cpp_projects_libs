@@ -14,8 +14,8 @@ void mouseMotionHandler(int x, int y);
 
 int mouseXPos, mouseYPos;
 
-static constexpr std::size_t N         = 512;
-static constexpr std::size_t SCRWidth  = N;
+static constexpr std::size_t N = 512;
+static constexpr std::size_t SCRWidth = N;
 static constexpr std::size_t SCRHeight = N;
 std::unique_ptr<Fluid<N>>    globalFluid;
 
@@ -35,8 +35,8 @@ int main(int argc, char** argv)
 
     double diffusion = 0.001;
     double viscosity = 0.01;
-    double dt        = 0.001;
-    globalFluid      = std::make_unique<Fluid<N>>(diffusion, viscosity, dt);
+    double dt = 0.001;
+    globalFluid = std::make_unique<Fluid<N>>(diffusion, viscosity, dt);
 
     glutDisplayFunc(draw);
     glutMouseFunc(mouseHandler);

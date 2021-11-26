@@ -3,34 +3,30 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
-#include <cstring> 
+#include <cstring>
 #include <map>
 #include <bitset>
 
-#include "util.h"
+#include "util.hpp"
 
 std::unordered_map<uint16_t, std::string> markerMapping{
-  {0xFFD8, "Start of Image"},  
-  {0xFFE0, "Application Default Header"},  
-  {0xFFDB, "Quantization Table"},  
-  {0xFFC0, "Start of Frame"},  
-  {0xFFC4, "Define Huffman Table"},  
-  {0xFFDA, "Start of Scan"},  
-  {0xFFD9, "End of Image"},
+            {0xFFD8, "Start of Image"}, {0xFFE0, "Application Default Header"}, {0xFFDB, "Quantization Table"},
+            {0xFFC0, "Start of Frame"}, {0xFFC4, "Define Huffman Table"},       {0xFFDA, "Start of Scan"},
+            {0xFFD9, "End of Image"},
 };
 
 class JPEGImage /*  : Image */
 {
 private:
-   std::vector<uint8_t> imgData_;
+    std::vector<uint8_t> imgData_;
 
-   //The pair represents the length and the code to be used in the Huffman maps        
-   typedef std::pair<int, uint16_t> HuffmanKeyType;
+    // The pair represents the length and the code to be used in the Huffman maps
+    typedef std::pair<int, uint16_t> HuffmanKeyType;
 
-   std::map<HuffmanKeyType, uint8_t> huffmanTables_[32];
+    std::map<HuffmanKeyType, uint8_t> huffmanTables_[32];
 
 public:
-    JPEGImage(const char *filename)
+    JPEGImage(const char* filename)
     {
         std::ifstream inFile(filename, std::ios::binary | std::ios::ate);
         if (!inFile.good()) { std::cerr << "File not found: " << filename << std::endl; }
@@ -50,28 +46,27 @@ public:
 
         // don't put .eof() in while loop; read byte by byte:  while (inFile.good() &&
         // !inFile.eof()); do the read in the while
-        while (inFile.read((char *)&data, sizeof(data))) {
-            imgData_.emplace_back(data);
-        }
+        while (inFile.read((char*)&data, sizeof(data))) { imgData_.emplace_back(data); }
     }
+
 private:
-    uint16_t ReadBitsFromFile(std::vector<uint8_t>::iterator &iter, int32_t len)
+    uint16_t ReadBitsFromFile(std::vector<uint8_t>::iterator& iter, int32_t len)
     {
         std::bitset<32> queueVal;
         uint32_t        queueLen;
 
         uint8_t  readByte;
-        uint16_t output;
+        uint32_t output;
 
         if (len > queueLen) {
             do {
                 readByte = *iter++;
-                queueVal = queueVal | (readByte << (24 - queueLen));
+                queueVal = queueVal | std::bitset<32> (readByte << (24 - queueLen));
                 queueLen += 8;
-            } while (len > queueLen)
+            } while (len > queueLen);
         }
 
-        output = ((queueVal >> (32 - len)) & ((1 << len) - 1));
+        output = ((queueVal >> (32 - len)) & std::bitset<32>((1 << len) - 1)).to_ulong();
 
         queueLen -= len;
         queueVal <<= len;
@@ -79,9 +74,9 @@ private:
         return output;
     }
 
-    int DecodeHuffmanTable(std::vector<uint8_t>::iterator & iter)
-    {//pass iterator as reference to be able to move it
-        auto tableBeginIter = iter;
+    int DecodeHuffmanTable(std::vector<uint8_t>::iterator& iter)
+    { // pass iterator as reference to be able to move it
+        auto     tableBeginIter = iter;
         uint16_t code = 0;
 
         // First byte of a DHT segment is the table ID. between 0 and 31
@@ -91,11 +86,9 @@ private:
 
         // Next sixteen bytes are the number of values for each code length
         uint8_t counts[16];
-        for (int i = 0; i < 16; ++i, ++iter) { 
-            counts[i] = *iter; 
-        }
+        for (int i = 0; i < 16; ++i, ++iter) { counts[i] = *iter; }
 
-        //From now we are building the actual Huffman table used for decoding
+        // From now we are building the actual Huffman table used for decoding
         for (int i = 0; i < 16; ++i) {
             for (int j = 0; j < counts[i]; ++j, ++iter, ++code) {
                 huffmanTables_[tableId][HuffmanKeyType(i + 1, code)] = (*iter);
@@ -104,13 +97,12 @@ private:
         }
 
         std::map<HuffmanKeyType, uint8_t>::iterator huffmanMapIter;
-        for (huffmanMapIter = huffmanTables_[tableId].begin();
-             huffmanMapIter != huffmanTables_[tableId].end(); huffmanMapIter++) {
+        for (huffmanMapIter = huffmanTables_[tableId].begin(); huffmanMapIter != huffmanTables_[tableId].end();
+             huffmanMapIter++) {
             std::bitset<16> y(huffmanMapIter->first.second);
             std::bitset<8>  z(huffmanMapIter->first.second);
 
-            std::cout << y << " at length " << huffmanMapIter->first.first << " = " << z
-                      << std::endl;
+            std::cout << y << " at length " << huffmanMapIter->first.first << " = " << z << std::endl;
         }
 
         return (iter - tableBeginIter);
@@ -120,11 +112,11 @@ public:
     void Decode()
     {
         static int counter = 0;
-        auto iter = imgData_.begin();
+        auto       iter = imgData_.begin();
         while (iter != imgData_.end()) {
             uint16_t marker = (*iter << 8 | *(iter + 1));
 
-            log_hex(marker);
+            DEB_HEX(marker);
             std::cout << markerMapping[marker] << std::endl;
 
             if (marker == 0xFFD8) { // Start of Image
@@ -135,12 +127,12 @@ public:
                 std::size_t huffmanSegmentLength = *(iter + 2) + *(iter + 3) - 2;
                 std::advance(iter, 4);
 
-                if(DecodeHuffmanTable(iter) != huffmanSegmentLength){
+                if (DecodeHuffmanTable(iter) != huffmanSegmentLength) {
                     std::cerr << "Unexpected end of DHT segment" << std::endl;
                     return;
                 }
 
-            } else if (marker == 0xFFDA) { //Start of Scan
+            } else if (marker == 0xFFDA) { // Start of Scan
                 std::advance(iter, (imgData_.end() - iter) - 2);
             } else {
                 std::size_t chunkLength = *(iter + 2) + *(iter + 3);

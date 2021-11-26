@@ -1,11 +1,10 @@
-#ifndef HITABLE_HEADER_HPP
-#define HITABLE_HEADER_HPP 1
+#ifndef _HITABLE_HEADER_HPP_
+#define _HITABLE_HEADER_HPP_ 1
 #pragma once
 
 #include "ray.hpp"
 
-struct hit_record
-{
+struct hit_record {
     float t;
     vec3  p;
     vec3  normal;
@@ -14,10 +13,7 @@ struct hit_record
 class hitable
 {
 public:
-    __device__ virtual bool hit(const ray&  r,
-                                float       t_min,
-                                float       t_max,
-                                hit_record& rec) const = 0;
+    __device__ virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const = 0;
 };
 
-#endif //! HITABLE_HEADER_HPP
+#endif //! _HITABLE_HEADER_HPP_

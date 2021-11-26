@@ -1,5 +1,5 @@
-#ifndef UTIL_HEADER_H
-#define UTIL_HEADER_H 1
+#ifndef _UTIL_HEADER_HPP_
+#define _UTIL_HEADER_HPP_ 1
 #pragma once
 
 #include <algorithm>
@@ -19,9 +19,10 @@
 #include <unordered_map>
 #include <vector>
 #include <cstring>
+#include <type_traits>
+#include <concepts>
 
-// Extracts the first argument out of a list of any number
-// of arguments
+// Extracts the first argument out of a list of any number of arguments
 #define ARG_1(a, ...) a
 
 /********************************************************************************
@@ -42,7 +43,6 @@
 #define personal_OS 0
 #endif
 #elif !(personal_OS == 0 || personal_OS == 1 || personal_OS == 2)
-#error CImg Library: Invalid configuration variable 'cimg_OS'.
 #error(correct values are '0 = unknown OS', '1 = Unix-like OS', '2 = Microsoft Windows').
 #endif
 
@@ -106,36 +106,11 @@ typedef long int intptr_t;
 typedef unsigned long int uintptr_t;
 #else
 #ifndef __intptr_t_defined
-typedef int intptr_t;
+typedef int          intptr_t;
 #define __intptr_t_defined
 #endif
 typedef unsigned int uintptr_t;
 #endif
-
-/*****************************************************************************
- *                             fork.cpp
- *****************************************************************************/
-
-#include <iostream>
-
-#include <sys/types.h>
-#include <stdio.h>
-#include <unistd.h>
-
-// int main()
-// {
-//     int childPid = fork();
-//     if (childPid < 0) {
-//         std::cout << "fork failed" << std::endl;
-//     } else if (childPid == 0) {
-//         // child
-//         std::cout << "child" << std::endl;
-//     } else {
-//         // parent
-//         std::cout << "parent" << std::endl;
-//     }
-//     return 0;
-// }
 
 #if defined(_WIN32) && defined(UA_DYNAMIC_LINKING)
 #ifdef UA_DYNAMIC_LINKING_EXPORT /* export dll */
@@ -179,38 +154,22 @@ typedef unsigned int uintptr_t;
  *         Header file that defines all sorts of useful functions
  *******************************************************************************/
 
-#define all(x) x.begin(), x.end()
-#define sortall(x) sort(all(x))
+#define ALL(x) x.begin(), x.end()
+#define SORTALL(x) sort(ALL(x))
 
 #define DEB(x) std::cout << #x << " =  " << x << std::endl
 #define DEB_HEX(x) std::cout << #x << " = 0x" << std::hex << x << std::dec << " "
 #define DEB_LONG(x) std::cout << std::setw(50) << #x << " = " << std::setw(12) << x << " "
 #define DEB_SHORT(x) std::cout << std::setw(25) << #x << " = " << std::setw(5) << x << " "
-#define NEWLINE() std::cout << std::endl
-#define DEBLINE() std::cout << __LINE__ << std::endl;
-#define DEBFILE() std::cout << __FILE__ << std::endl;
-
-#define WORD_SIZE sizeof(void *)
-
-#if (personal_OS == 1)
-#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#elif (personal_OS == 2)
-#define __FILENAME__ (strrchr(__FILE__, "\\") ? strrchr(__FILE__, "\\") + 1 : __FILE__)
-#endif
-
-#define persLog(x) \
-    std::cout << #x << " =  " << x << "; line: " << __LINE__ << "; file: " << __FILENAME__ << std::endl
-#define persLogHex(x)                                                                \
-    std::cout << #x << " =  " << std::hex << x << std::dec << "; line: " << __LINE__ \
-              << "; file: " << __FILENAME__ << std::endl
-#define persLogBool(x)                                                                                       \
-    std::cout << #x << " =  " << std::boolalpha << x << "; line: " << __LINE__ << "; file: " << __FILENAME__ \
-              << std::endl
-#define persLogBinary(x)             \
+#define DEB_BOOL(x) std::cout << #x << " = " << std::boolalpha << x << " ";
+#define DEB_BINARY(x)                \
     std::bitset<sizeof(x) * 8> y(x); \
-    std::cout << #x << " =  " << y << "; line: " << __LINE__ << "; file: " << __FILENAME__ << std::endl
+    std::cout << #x << " =  " << y << " "
+#define NEWLINE() std::cout << std::endl
+#define DEBLINE() std::cout << "Line: " << __LINE__ << std::endl;
+#define DEBFILE() std::cout << "File: " << __FILE__ << std::endl;
 
-#define PAUSE_THREAD(x)                                        \
+#define RMG_PAUSE_THREAD(x)                                    \
     static int counter = 0;                                    \
     counter++;                                                 \
     if (counter == x) {                                        \
@@ -218,20 +177,37 @@ typedef unsigned int uintptr_t;
         counter = 0;                                           \
     }
 
-namespace personal
+#define CONCATENATE_IMPL(s1, s2) s1##s2
+#define CONCATENATE(s1, s2) CONCATENATE_IMPL(s1, s2)
+
+#ifdef __COUNTER__
+#define RMG_ANONYMOUS_VARIABLE(str) CONCATENATE(str, __COUNTER__)
+#else
+#define RMG_ANONYMOUS_VARIABLE(str) CONCATENATE(str, __LINE__)
+#endif
+
+#define PERSONAL_WORD_SIZE sizeof(void*)
+
+#if (personal_OS == 1)
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#elif (personal_OS == 2)
+#define __FILENAME__ (strrchr(__FILE__, "\\") ? strrchr(__FILE__, "\\") + 1 : __FILE__)
+#endif
+
+namespace rmg
 {
 // TODO: rewrite hexdump!!!
-static void hexdump(FILE *fp, const char *name, const void *ptr, size_t len)
+static void hexdump(FILE* fp, const char* name, const void* ptr, size_t len)
 {
-    const char *p = (const char *)ptr;
-    size_t of = 0;
+    const char* p = (const char*)ptr;
+    size_t      of = 0;
 
     if (name) fprintf(fp, "%s hexdump (%zd bytes):\n", name, len);
 
     for (of = 0; of < len; of += 16) {
         char hexen[16 * 3 + 1];
         char charen[16 + 1];
-        int hof = 0;
+        int  hof = 0;
 
         int cof = 0;
         int i;
@@ -244,17 +220,8 @@ static void hexdump(FILE *fp, const char *name, const void *ptr, size_t len)
     }
 }
 
-#define CONCATENATE_IMPL(s1, s2) s1##s2
-#define CONCATENATE(s1, s2) CONCATENATE_IMPL(s1, s2)
-
-#ifdef __COUNTER__
-#define ANONYMOUS_VARIABLE(str) CONCATENATE(str, __COUNTER__)
-#else
-#define ANONYMOUS_VARIABLE(str) CONCATENATE(str, __LINE__)
-#endif
-
 template <typename Type>
-void swap(Type *&i, Type *&j)
+void swap(Type*& i, Type*& j)
 {
     // copy constructor
     Type aux = i;
@@ -277,7 +244,7 @@ void CreateMatrix()
     int RR = 4;
     int CC = 5;
 
-    std::vector<std::vector<char>> grid(RR);
+    std::vector<std::vector<T>> grid(RR);
     for (int i = 0; i < RR; ++i) { grid[i].resize(CC); }
 }
 
@@ -304,18 +271,6 @@ inline int ToInt(bool b)
 }
 
 /**
- * @fn ToString
- * @brief Gets a valid string for the char pointer.
- * @param cstr A C-string pointer
- * @return A string copy of the C array. If `cstr` is NULL, this returns an
- *  	   empty string.
- */
-inline std::string ToString(const char *cstr)
-{
-    return cstr ? std::string(cstr) : std::string();
-}
-
-/**
  * @fn ExtractNumbersOutOfFile
  * @brief Extract numbers out of a given string
  * e.g. [[],[100],[80],[60],[70],[60],[75],[85]]
@@ -325,9 +280,9 @@ inline std::string ToString(const char *cstr)
  * @param file_name numeric floating point type
  * @return
  */
-inline std::vector<int> ExtractNumbersOutOfFile(const char *file_name)
+inline std::vector<int> ExtractNumbersOutOfFile(const char* fileName)
 {
-    std::ifstream file(file_name);
+    std::ifstream     file(fileName);
     std::stringstream ss;
     ss << file.rdbuf();
     std::vector<int> v;
@@ -335,9 +290,9 @@ inline std::vector<int> ExtractNumbersOutOfFile(const char *file_name)
         std::string input;
         getline(ss, input, ',');
         std::string output = std::regex_replace(input, std::regex("[^0-9]*([0-9]+).*"), std::string("$1"));
-        try { // it is done beucase it might be empty
+        try { // it is done because it might be empty
             v.emplace_back(stoi(output));
-        } catch (std::exception &e) {
+        } catch (std::exception& e) {
             // std::cout << e.what() << std::endl;
             continue;
         }
@@ -351,7 +306,7 @@ inline std::vector<int> ExtractNumbersOutOfFile(const char *file_name)
  * @tparam n
  * @return double
  */
-template <typename NumericType>
+template <typename NumericType, std::enable_if_t<std::is_arithmetic_v<NumericType>, bool> = true>
 inline double computeSquareRoot(NumericType n)
 {
     double beg = 0, end = n, mid;
@@ -374,27 +329,12 @@ inline double computeSquareRoot(NumericType n)
  * @param grid
  */
 template <typename T>
-void ReadGridFromFile(std::vector<std::vector<T>> &grid)
+void ReadGridFromFile(std::vector<std::vector<T>>& grid, const char* fileName)
 {
-    // std::ifstream file("tests.txt");
-    // std::string line;
-    // while(std::getline(file,line)){
-    //     std::cout << line << std::endl;
-    //     std::string::iterator it_line = line.begin();
-    //     std::vector<char> v;
-    //     while(it_line != line.end()){
-    //         if(*it_line != ' ' && *it_line != '\r'){
-    //             v.emplace_back(*it_line);
-    //         }
-    //         it_line++;
-    //     }
-    //     grid.emplace_back(v);
-    // }
-
-    std::ifstream file("tests.txt");
+    std::ifstream     file(fileName);
     std::stringstream ss;
     ss << file.rdbuf();
-    const std::string &s = ss.str();
+    const std::string&          s = ss.str();
     std::string::const_iterator it_s = s.begin();
 
     std::vector<T> vec(s.begin(), s.end());
@@ -409,32 +349,88 @@ void ReadGridFromFile(std::vector<std::vector<T>> &grid)
 }
 
 template <typename T>
-void PrintMatrix(std::vector<std::vector<T>> &grid)
+void ReadGridFromFileEasy(std::vector<std::vector<T>>& grid, const std::string& fileName)
 {
-    for (size_t i = 0; i < grid.size(); ++i) {
-        for (size_t j = 0; j < grid[i].size(); ++j) { std::cout << grid[i][j] << " "; }
-        std::cout << std::endl; // works also with "\n", don't need to
-                                // refresh buffer
+    std::ifstream file(fileName);
+    std::string   line;
+    while (std::getline(file, line)) {
+        std::cout << line << std::endl;
+        std::string::iterator it_line = line.begin();
+        std::vector<char>     v;
+        while (it_line != line.end()) {
+            if (*it_line != ' ' && *it_line != '\r') { v.emplace_back(*it_line); }
+            it_line++;
+        }
+        grid.emplace_back(v);
     }
 }
 
 template <typename T>
-void PrintVector(std::vector<T> &v)
+void PrintMatrix(std::vector<std::vector<T>>& grid)
 {
-    std::cout << "Printing Vector" << '\n';
+    std::cout << "Printing Matrix ..." << '\n';
+    for (size_t i = 0; i < grid.size(); ++i) {
+        for (size_t j = 0; j < grid[i].size(); ++j) { std::cout << grid[i][j] << " "; }
+        std::cout << std::endl; // works also with "\n", don't need to refresh buffer
+    }
+}
+
+template <typename T>
+void PrintVector(std::vector<T>& v)
+{
+    std::cout << "Printing Vector ..." << '\n';
     size_t size = v.size();
     if (size == 0) return;
+
     std::cout << "[";
     size_t i = 0;
-    for (; i < size - 1; ++i) {
-        // std::cout << "v[ " << i << "]= " << v[i] << std::endl;
-        std::cout << v[i] << ", ";
-    }
+    for (; i < size - 1; ++i) std::cout << v[i] << ", ";
     std::cout << v[i];
     std::cout << "] " << std::endl;
 }
 
-} // namespace personal
+template <typename T>
+requires std::floating_point<T> inline int getFractionalPart(T x)
+{
+    return x - static_cast<int>(x);
+}
+
+template <typename T>
+requires std::floating_point<T> inline int round(T x)
+{
+    return ((x) >= 0) ? (int)((x) + .5) : (int)((x)-.5);
+}
+
+template <typename Type>
+concept Comparable = requires(Type a, Type b)
+{
+    {
+        a < b
+    }
+    ->std::convertible_to<bool>;
+    {
+        a == b
+    }
+    ->std::convertible_to<bool>;
+};
+template <Comparable T>
+inline T abs(T x)
+{
+    return ((x < 0) ? (-x) : x);
+}
+
+template <Comparable T>
+inline T max(T x, T y)
+{
+    return ((x >= y) ? x : y);
+}
+
+template <Comparable T>
+inline T min(T x, T y)
+{
+    return ((x <= y) ? x : y);
+}
+} // namespace rmg
 
 /*****************************************************************************
  *     Macros to test for successful allocation of memory and to free it
@@ -445,40 +441,12 @@ void PrintVector(std::vector<T> &v)
         free(x);    \
         (x) = NULL; \
     } while (0)
+#define ERRCODE(x) (errcode = ((errcode > 100) ? (errcode) : (x)))
 
 /*****************************************************************************
  *     Inline functions to be used in place of the standard functions
  *****************************************************************************/
-template <typename T>
-inline int INT(T x)
-{
-    return static_cast<int>(x);
-}
 
-template <typename T>
-inline int FRAC(T x)
-{
-    return x - static_cast<int>(x);
-}
-
-template <typename T>
-inline T ABS(T x)
-{
-    return ((x < 0) ? (-x) : x);
-}
-template <typename T>
-inline T MAX(T x, T y)
-{
-    return ((x >= y) ? x : y);
-}
-
-template <typename T>
-inline T MIN(T x, T y)
-{
-    return ((x <= y) ? x : y);
-}
-
-#define ROUND(x) (((x) >= 0) ? (int)((x) + .5) : (int)((x)-.5))
 // round-off of x
 #define MOD(x, y) ((x) % (y))           // x modulus y
 #define SQR(x) ((x) * (x))              // x-squared
@@ -490,7 +458,6 @@ inline T MIN(T x, T y)
  *              Macro to evaluate function x with error checking
  *              (Fatal errors are numbered higher than 100)
  *****************************************************************************/
-#define ERRCODE(x) (errcode = ((errcode > 100) ? (errcode) : (x)))
 
 // Constructs fp from an IEEE754 double. It is a template to prevent compile
 // errors on platforms where double is not IEEE754.
