@@ -8,7 +8,7 @@
 
 #include <Eigen/Dense>
 
-#include "../include/util.h"
+#include "util.hpp"
 #include <cstdio>
 
 

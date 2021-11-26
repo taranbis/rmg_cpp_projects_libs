@@ -2,11 +2,10 @@
 #define _LINEAR_HEADER_HPP_ 1
 #pragma once
 
-#include "layer.hpp"
-
-#include "../include/util.h"
-
 #include <Eigen/Dense>
+
+#include "layer.hpp"
+#include "util.hpp"
 
 // sensor_input = Eigen::Map<Eigen::MatrixXd>(sensor_input_vector[0].data(),3,sensor_input_vector.size());
 

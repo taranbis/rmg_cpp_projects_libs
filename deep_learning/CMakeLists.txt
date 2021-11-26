@@ -7,6 +7,8 @@ set_target_properties(market_prediction PROPERTIES CXX_STANDARD 20 CXX_STANDARD_
 target_include_directories(market_prediction PUBLIC "./include" "../util/csv")
 target_link_libraries(market_prediction csvLib)
 
+include_directories(PUBLIC "../util/include")
+
 
 set(DL_SOURCES  dl.cpp 
                 src/linear.cpp 

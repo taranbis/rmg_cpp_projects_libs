@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "../include/util.h"
+#include "util.hpp"
 
 template <typename NumericType, size_t batchDim, size_t inDim, size_t outDim>
 class Sequential

@@ -2,7 +2,7 @@
 #define _LAYER_UTILS_HEADER_HPP_ 1
 #pragma once
 
-#include "../include/util.h"
+#include "util.hpp"
 
 // TODO:implement this
 template <typename NumericType, size_t batchDim, size_t numClasses>
@@ -34,7 +34,7 @@ private:
 public:
     NumericType operator()(Eigen::MatrixXd input, Eigen::VectorXd target)
     {
-        double loss = personal::computeSquareRoot((input.colwise() - target).squaredNorm());
+        double loss = rmg::computeSquareRoot((input.colwise() - target).squaredNorm());
         dx_ = (input.colwise() - target) / loss;
 
         return loss;
