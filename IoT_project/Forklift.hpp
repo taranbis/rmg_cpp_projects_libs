@@ -8,25 +8,7 @@
 #include <random>
 #include <thread>
 
-#define DEB(x)     std::cout << #x << " =  " << x << ";\t "
-#define DEBBOOL(x) std::cout << std::boolalpha << #x << " =  " << x << ";\t "
-#define NEWLINE()  std::cout << std::endl
-#define DEBLINE()  std::cout << __LINE__ << std::endl;
-#define DEBFILE()  std::cout << __FILE__ << std::endl;
-#define PAUSE_FUNCTION(x)                                      \
-    static int counter = 0;                                    \
-    counter++;                                                 \
-    if (counter == x)                                          \
-    {                                                          \
-        std::this_thread::sleep_for(std::chrono::seconds(10)); \
-        counter = 0;                                           \
-    }
-
-template <typename T>
-inline T abs(T x)
-{
-    return ((x < 0) ? (-x) : x);
-}
+#include "util.hpp"
 
 /**
  * @class Movement
@@ -73,13 +55,12 @@ private:
 
     // TODO: should make this atomic as well
     std::chrono::time_point<std::chrono::high_resolution_clock> _currTime{
-        std::chrono::high_resolution_clock::now()};
+                std::chrono::high_resolution_clock::now()};
 
     std::atomic<T> _v{0.0};
 
     template <typename D>
-    struct Trajectory
-    {
+    struct Trajectory {
         D dist;
         D sinAngle;
         D cosAngle;
@@ -99,8 +80,7 @@ public:
                       "double, long double");
     }
 
-    Forklift(uint32_t id, T x, T y, T z)
-        : _id(id), _currX(x), _currY(y), _currZ(z)
+    Forklift(uint32_t id, T x, T y, T z) : _id(id), _currX(x), _currY(y), _currZ(z)
     {
         static_assert(floating_point,
                       "Please use one of the floating point types: float, "
@@ -160,8 +140,8 @@ public:
     T GetTime() const
     {
         return ((T)std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::high_resolution_clock::now() - _currTime)
-                    .count()) /
+                            std::chrono::high_resolution_clock::now() - _currTime)
+                            .count()) /
                1000;
     }
 
@@ -175,22 +155,18 @@ public:
     void MoveToPosition(T destX, T destY)
     {
         _moving = true;
-        _brake  = false;
+        _brake = false;
 
         /* compute trajectory to target: distance and angle from current position */
-        _trajectory.dist =
-            sqrt((destX - _currX.load(std::memory_order_relaxed)) *
-                     (destX - _currX.load(std::memory_order_relaxed)) +
-                 (destY - _currY.load(std::memory_order_relaxed)) *
-                     (destY - _currY.load(std::memory_order_relaxed)));
-        _trajectory.cosAngle =
-            (destX - _currX.load(std::memory_order_relaxed)) / _trajectory.dist;
-        _trajectory.sinAngle =
-            (destY - _currY.load(std::memory_order_relaxed)) / _trajectory.dist;
+        _trajectory.dist = sqrt((destX - _currX.load(std::memory_order_relaxed)) *
+                                            (destX - _currX.load(std::memory_order_relaxed)) +
+                                (destY - _currY.load(std::memory_order_relaxed)) *
+                                            (destY - _currY.load(std::memory_order_relaxed)));
+        _trajectory.cosAngle = (destX - _currX.load(std::memory_order_relaxed)) / _trajectory.dist;
+        _trajectory.sinAngle = (destY - _currY.load(std::memory_order_relaxed)) / _trajectory.dist;
 
         /* this condition is sufficient to stop on target */
-        while (_trajectory.dist > 0.03)
-        {
+        while (_trajectory.dist > 0.03) {
             // maybe use a last update variable
             _currTime = std::chrono::high_resolution_clock::now();
             ExecuteMove(destX, destY);
@@ -205,8 +181,8 @@ private:
 
         /* This should be in seconds */
         T dt = ((T)std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::high_resolution_clock::now() - _currTime)
-                    .count()) /
+                            std::chrono::high_resolution_clock::now() - _currTime)
+                            .count()) /
                1000;
 
         DEB(_currX.load(std::memory_order_relaxed));
@@ -219,19 +195,16 @@ private:
 
         T v = _v.load(std::memory_order_relaxed);
 
-        if (v * v >= 2 * abs(decc) * _trajectory.dist)
-        {
+        if (v * v >= 2 * abs(decc) * _trajectory.dist) {
             Brake(dt);
             /* Once it starts breaking it will stop only on target */
             _brake = true;
             return;
         }
 
-        if (!_brake)
-        {
+        if (!_brake) {
             /* if V != Vmax m/s, speed increases linearly */
-            if (v <= vMax)
-            {
+            if (v <= vMax) {
                 Accelerate(dt);
                 return;
             }
@@ -258,12 +231,10 @@ private:
 
     void UpdatePosition(T dtmp)
     {
-        _currX.store(
-            (_currX.load(std::memory_order_relaxed) + dtmp * _trajectory.cosAngle),
-            std::memory_order_relaxed);
-        _currY.store(
-            (_currY.load(std::memory_order_relaxed) + dtmp * _trajectory.sinAngle),
-            std::memory_order_relaxed);
+        _currX.store((_currX.load(std::memory_order_relaxed) + dtmp * _trajectory.cosAngle),
+                     std::memory_order_relaxed);
+        _currY.store((_currY.load(std::memory_order_relaxed) + dtmp * _trajectory.sinAngle),
+                     std::memory_order_relaxed);
         _trajectory.dist -= dtmp;
     }
 };

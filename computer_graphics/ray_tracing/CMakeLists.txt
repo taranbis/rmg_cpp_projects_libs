@@ -3,7 +3,7 @@ set (CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
 )
 
-find_package (CUDA 4.0 REQUIRED)
+find_package (CUDA 10.0 REQUIRED)
 project(ray_tracing_with_cuda LANGUAGES C CXX CUDA)
 
 # add_library(ray_tracing_library STATIC ray.hpp vec3.hpp)
@@ -11,8 +11,9 @@ project(ray_tracing_with_cuda LANGUAGES C CXX CUDA)
 # set_target_properties(ray_tracing_library PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(ray_tracing ray_tracing.cu)
-set_property(TARGET ray_tracing PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-target_compile_features(ray_tracing PUBLIC cxx_std_11)
+set_target_properties(ray_tracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(ray_tracing PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
+include_directories(PUBLIC "../../util/include")
 # target_link_libraries(ray_tracing PRIVATE ray_tracing_library)
 
 if(UNIX)

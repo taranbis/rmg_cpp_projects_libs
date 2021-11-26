@@ -2,8 +2,9 @@
 #define KALMAN_FILTER_HEADER_HPP 1
 #pragma once
 
-#include <Eigen/Dense>
 #include <iostream>
+
+#include <Eigen/Dense>
 
 /**
  * @class Kalman
@@ -58,7 +59,7 @@ public:
 
 public:
     KalmanFilter(Vector<N> x, Matrix<M, M> measureVariance, T accVariance)
-        : _F(), _S(), _H(), _R(measureVariance), _Q(), _G(), _x(x)
+            : _F(), _S(), _H(), _R(measureVariance), _Q(), _G(), _x(x)
     {
         static_assert(floating_point,
                       "Please use one of the floating point types: float, "
@@ -66,10 +67,7 @@ public:
 
         /* Initialize observation Matrix. This is the same for entire computation*/
         _H.setZero();
-        for (int i = 0; i < M; ++i)
-        {
-            _H(i, i * M) = 1;
-        }
+        for (int i = 0; i < M; ++i) { _H(i, i * M) = 1; }
 
         // _H(0, 0) = 1;
         // _H(1, 2) = 1;
@@ -90,11 +88,10 @@ public:
         _F.setIdentity();
         /* Initialize Acceleration Transition Matrix */
         _G.setZero();
-        for (int i = 0; i < M; ++i)
-        {
+        for (int i = 0; i < M; ++i) {
             _F(X + i * M, V + i * M) = dt;
-            _G(X + i * M, i)         = 0.5 * dt * dt;
-            _G(V + i * M, i)         = dt;
+            _G(X + i * M, i) = 0.5 * dt * dt;
+            _G(V + i * M, i) = dt;
         }
 
         // std::cout << "F: \n" << _F << std::endl;
@@ -109,8 +106,7 @@ public:
         const Vector<M> y = meas - _H * _x;
 
         /* Gain matrix */
-        const Matrix<N, M> _K =
-            _S * _H.transpose() * (_H * _S * _H.transpose() + _R).inverse();
+        const Matrix<N, M> _K = _S * _H.transpose() * (_H * _S * _H.transpose() + _R).inverse();
 
         /* Update states */
         _x += _K * y;

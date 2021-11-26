@@ -1,12 +1,11 @@
-
-#include "Forklift.hpp"
-#include "KalmanFilter.hpp"
-
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <thread>
+
+#include "Forklift.hpp"
+#include "KalmanFilter.hpp"
 
 template <std::size_t S>
 using Vector = typename Eigen::Vector<double, S>;

@@ -1,5 +1,5 @@
-#ifndef RAY_HEADER_HPP
-#define RAY_HEADER_HPP 1
+#ifndef _RAY_HEADER_HPP_
+#define _RAY_HEADER_HPP_ 1
 #pragma once
 
 #include "vec3.hpp"
@@ -7,9 +7,7 @@
 class ray
 {
 public:
-    __device__ ray()
-    {
-    }
+    __device__ ray() {}
     __device__ ray(const vec3& a, const vec3& b)
     {
         A = a;
@@ -41,4 +39,4 @@ private:
     vec3 B;
 };
 
-#endif //! RAY_HEADER_HPP
+#endif //! _RAY_HEADER_HPP_

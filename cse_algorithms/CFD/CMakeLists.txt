@@ -11,6 +11,7 @@ add_executable(CFD_Simulation ${SOURCES})
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../Modules)
 
+include_directories(PUBLIC "../../util/include")
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 target_link_libraries(CFD_Simulation SDL2::SDL2)

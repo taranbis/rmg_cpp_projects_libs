@@ -26,6 +26,6 @@ int main()
     //(double diffusion, double viscosity, double dt)
     double                 diffusion = 0.001;
     double                 viscosity = 0.01;
-    double                 dt        = 0.001;
-    std::unique_ptr<Fluid> fluid     = std::make_unique(diffusion, viscosity, dt);
+    double                 dt = 0.001;
+    std::unique_ptr<Fluid> fluid = std::make_unique(diffusion, viscosity, dt);
 }
