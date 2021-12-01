@@ -106,7 +106,7 @@ typedef long int intptr_t;
 typedef unsigned long int uintptr_t;
 #else
 #ifndef __intptr_t_defined
-typedef int          intptr_t;
+typedef int intptr_t;
 #define __intptr_t_defined
 #endif
 typedef unsigned int uintptr_t;
@@ -200,14 +200,14 @@ namespace rmg
 static void hexdump(FILE* fp, const char* name, const void* ptr, size_t len)
 {
     const char* p = (const char*)ptr;
-    size_t      of = 0;
+    size_t of = 0;
 
     if (name) fprintf(fp, "%s hexdump (%zd bytes):\n", name, len);
 
     for (of = 0; of < len; of += 16) {
         char hexen[16 * 3 + 1];
         char charen[16 + 1];
-        int  hof = 0;
+        int hof = 0;
 
         int cof = 0;
         int i;
@@ -282,7 +282,7 @@ inline int ToInt(bool b)
  */
 inline std::vector<int> ExtractNumbersOutOfFile(const char* fileName)
 {
-    std::ifstream     file(fileName);
+    std::ifstream file(fileName);
     std::stringstream ss;
     ss << file.rdbuf();
     std::vector<int> v;
@@ -331,10 +331,10 @@ inline double computeSquareRoot(NumericType n)
 template <typename T>
 void ReadGridFromFile(std::vector<std::vector<T>>& grid, const char* fileName)
 {
-    std::ifstream     file(fileName);
+    std::ifstream file(fileName);
     std::stringstream ss;
     ss << file.rdbuf();
-    const std::string&          s = ss.str();
+    const std::string& s = ss.str();
     std::string::const_iterator it_s = s.begin();
 
     std::vector<T> vec(s.begin(), s.end());
@@ -352,11 +352,11 @@ template <typename T>
 void ReadGridFromFileEasy(std::vector<std::vector<T>>& grid, const std::string& fileName)
 {
     std::ifstream file(fileName);
-    std::string   line;
+    std::string line;
     while (std::getline(file, line)) {
         std::cout << line << std::endl;
         std::string::iterator it_line = line.begin();
-        std::vector<char>     v;
+        std::vector<char> v;
         while (it_line != line.end()) {
             if (*it_line != ' ' && *it_line != '\r') { v.emplace_back(*it_line); }
             it_line++;
@@ -387,6 +387,43 @@ void PrintVector(std::vector<T>& v)
     for (; i < size - 1; ++i) std::cout << v[i] << ", ";
     std::cout << v[i];
     std::cout << "] " << std::endl;
+}
+
+
+//TODO: implement this; or name it SequenceContainer
+// template <typename Container>
+// concept SortableContainer = std::is_class_v<Container>&& typename Container::iterator&&
+//             Container::value_type&& requires(SortableContainer cont)
+// {
+//     {
+//         cont.begin();
+//     }
+//     ->std::same_as<SortableContainer::iterator>;
+// };
+
+// template <SortableContainer Cont>
+template<typename Cont>
+int CountEqualElements(Cont random_reads, Cont random_writes)
+{
+    sort(random_reads.begin(), random_reads.end());
+    sort(random_writes.begin(), random_writes.end());
+    int result = 0;
+    auto it_r = random_reads.begin();
+    auto it_w = random_writes.begin();
+    while (it_r != random_reads.end() && it_w != random_writes.end()) {
+        if (*it_r == *it_w) {
+            result++;
+            it_r++;
+            it_w++;
+            continue;
+        }
+        if (*it_r > *it_w) {
+            it_w++;
+        } else {
+            it_r++;
+        }
+    }
+    return result;
 }
 
 template <typename T>

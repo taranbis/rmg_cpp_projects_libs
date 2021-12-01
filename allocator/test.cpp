@@ -15,25 +15,27 @@ public:
 
 int main()
 {
+
+
     std::pmr::pool_options opt;
 
-	opt.largest_required_pool_block = 1024;
+    opt.largest_required_pool_block = 1024;
     opt.max_blocks_per_chunk = 8;
     std::pmr::unsynchronized_pool_resource pool1024(opt, std::pmr::get_default_resource());
 
-	opt.largest_required_pool_block = 512;
+    opt.largest_required_pool_block = 512;
     opt.max_blocks_per_chunk = 16;
     std::pmr::unsynchronized_pool_resource pool512(opt, &pool1024);
 
-	opt.largest_required_pool_block = 256;
+    opt.largest_required_pool_block = 256;
     opt.max_blocks_per_chunk = 32;
     std::pmr::unsynchronized_pool_resource pool256(opt, &pool512);
 
-	opt.largest_required_pool_block = 128;
+    opt.largest_required_pool_block = 128;
     opt.max_blocks_per_chunk = 64;
     std::pmr::unsynchronized_pool_resource pool128(opt, &pool256);
 
-	opt.largest_required_pool_block = 64;
+    opt.largest_required_pool_block = 64;
     opt.max_blocks_per_chunk = 256;
     std::pmr::unsynchronized_pool_resource pool64(opt, &pool128);
 
@@ -61,31 +63,32 @@ int main()
     opt.max_blocks_per_chunk = 128;
     std::pmr::unsynchronized_pool_resource pool1(opt, &pool2);
 
-
-	opt.largest_required_pool_block = 16;
-    opt.max_blocks_per_chunk = 2048;
+    opt.largest_required_pool_block = 16;
+    opt.max_blocks_per_chunk = 50000;
     std::pmr::unsynchronized_pool_resource pool16_TEST(opt, std::pmr::get_default_resource());
 
-    constexpr int size = 500000;
+    // std::array<std::byte, 50000 * 16> raw;
+    // std::pmr::monotonic_buffer_resource bufferMemSource{raw.data(), raw.size(), std::pmr::get_default_resource()};
+
+    constexpr size_t numRepetitions = 5;
+    constexpr size_t size = 50000;
     std::cout << "Speed in allocating " << size << " objects of size: " << sizeof(Test) << std::endl;
 
     PROF_START_BLOCK("My Allocator");
-    for (size_t j = 0; j < 500; j++) {
-        std::vector<Test*> testVector{};
-        testVector.reserve(500000);
-        for (size_t i = 0; i < size; ++i)
-            testVector.emplace_back(reinterpret_cast<Test*>(pool16_TEST.allocate(sizeof(Test))));
+    std::pmr::list<Test> testListPMR{&pool16_TEST};
+    for (size_t j = 0; j < numRepetitions; j++) {
+        testListPMR.clear();
+        for (size_t i = 0; i < size; ++i) testListPMR.insert(testListPMR.end(), Test{});
     }
     PROF_END_BLOCK;
 
-	    ProfBase::Print();
+    ProfBase::Print();
 
-
-    PROF_START_BLOCK("New / Delete allocate");
-    for (size_t j = 0; j < 500; j++) {
-        std::vector<Test*> testVector{};
-        testVector.reserve(500000);
-        for (size_t i = 0; i < size; ++i) testVector.emplace_back(new Test());
+    PROF_START_BLOCK("Default allocator");
+    std::list<Test> testList{};
+    for (size_t j = 0; j < numRepetitions; j++) {
+        testList.clear();
+        for (size_t i = 0; i < size; ++i) testList.insert(testList.end(), Test{});
     }
     PROF_END_BLOCK;
 
