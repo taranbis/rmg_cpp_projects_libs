@@ -15,8 +15,6 @@ public:
 
 int main()
 {
-
-
     std::pmr::pool_options opt;
 
     opt.largest_required_pool_block = 1024;
@@ -68,7 +66,8 @@ int main()
     std::pmr::unsynchronized_pool_resource pool16_TEST(opt, std::pmr::get_default_resource());
 
     // std::array<std::byte, 50000 * 16> raw;
-    // std::pmr::monotonic_buffer_resource bufferMemSource{raw.data(), raw.size(), std::pmr::get_default_resource()};
+    // std::pmr::monotonic_buffer_resource bufferMemSource{raw.data(), raw.size(),
+    // std::pmr::get_default_resource()};
 
     constexpr size_t numRepetitions = 5;
     constexpr size_t size = 50000;
