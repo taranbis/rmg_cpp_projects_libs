@@ -39,7 +39,7 @@ public:
         ship_.setOutlineThickness(2);
         /**
          * It's the expected behaviour. The origin is the center point of all transformations, including the
-         * translation (position). And since the position is still (0, 0), the consequence is that the whole shape
+         * translation (position). And if the position is still (0, 0), the consequence is that the whole shape
          * moves by an offset of (-mdX, -midY bla bla), and goes back to the left-most corner of the screen.
          */
         setPosition(midX, midY);
