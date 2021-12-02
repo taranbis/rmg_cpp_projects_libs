@@ -42,9 +42,9 @@ public:
     void UseDevice(std::weak_ptr<Device> devicePtr)
     {
         /* We want to make sure the device is still available */
-        std::shared_ptr<Device> device;
-        if (device = devicePtr.lock()) {
-            std::cout << "Device availble" << std::endl;
+        std::shared_ptr<Device> device = devicePtr.lock();
+        if (device) {
+            std::cout << "Device available" << std::endl;
         } else {
             std::cout << "Device not available anymore!" << std::endl;
         }

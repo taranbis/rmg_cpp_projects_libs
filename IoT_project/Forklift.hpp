@@ -129,12 +129,12 @@ public:
 
     T GetXSpeed() const
     {
-        return abs(_v.load(std::memory_order_relaxed) * _trajectory.cosAngle);
+        return rmg::abs(_v.load(std::memory_order_relaxed) * _trajectory.cosAngle);
     }
 
     T GetYSpeed() const
     {
-        return abs(_v.load(std::memory_order_relaxed) * _trajectory.sinAngle);
+        return rmg::abs(_v.load(std::memory_order_relaxed) * _trajectory.sinAngle);
     }
 
     T GetTime() const
@@ -195,7 +195,7 @@ private:
 
         T v = _v.load(std::memory_order_relaxed);
 
-        if (v * v >= 2 * abs(decc) * _trajectory.dist) {
+        if (v * v >= 2 * rmg::abs(decc) * _trajectory.dist) {
             Brake(dt);
             /* Once it starts breaking it will stop only on target */
             _brake = true;
