@@ -30,17 +30,17 @@ public:
     static constexpr T frequency = 10;
 
 private:
-    std::random_device          _rd;
-    std::mt19937                _mt{_rd()};
+    std::random_device _rd;
+    std::mt19937 _mt{_rd()};
     std::normal_distribution<T> _normDist;
 
-    const bool        _outputToFile = true;
+    const bool _outputToFile = true;
     const std::string _fileName;
 
-    std::thread       _workThread;
+    std::thread _workThread;
     std::atomic<bool> _stop{false};
 
-    std::shared_ptr<Forklift<T>>  _forkliftPtr;
+    std::shared_ptr<Forklift<T>> _forkliftPtr;
     std::shared_ptr<Communicator> _comm;
 
 public:
@@ -87,7 +87,7 @@ public:
             std::ofstream outputFile(_fileName);
 
             auto currTime = std::chrono::high_resolution_clock::now();
-            T    timestamp = -1;
+            T timestamp = -1;
 
             while (true) {
                 std::this_thread::sleep_for(std::chrono::milliseconds((int)frequency));

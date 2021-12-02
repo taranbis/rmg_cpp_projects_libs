@@ -34,7 +34,7 @@ public:
 
         zeroGrads();
     }
-    
+
     Eigen::Matrix<NumericType, Eigen::Dynamic, Eigen::Dynamic> operator()(
                 Eigen::Matrix<NumericType, Eigen::Dynamic, Eigen::Dynamic> x) final override
     {
@@ -55,26 +55,27 @@ public:
     Eigen::Matrix<NumericType, Eigen::Dynamic, Eigen::Dynamic> backward(
                 Eigen::Matrix<NumericType, Eigen::Dynamic, Eigen::Dynamic> dout) final override
     {
-// std::cout << "------------Backward Linear-------------------" << std::endl;
+        // std::cout << "------------Backward Linear-------------------" << std::endl;
 
         dWeights_ = cache_.x.transpose() * dout;
         Eigen::MatrixXd dX = dout * weights_.transpose();
         Eigen::MatrixXd tmp = Eigen::Matrix<NumericType, batchDim, 1>::Ones();
-        dBias_ = tmp.transpose() * dout; 
+        dBias_ = tmp.transpose() * dout;
         return dX;
     }
 
-    void updateParams(double learningRate)final override{
+    void updateParams(double learningRate) final override
+    {
         weights_ -= learningRate * dWeights_;
         bias_ -= learningRate * dBias_;
     }
 
 private:
-    //parameters
+    // parameters
     Eigen::Matrix<NumericType, Eigen::Dynamic, Eigen::Dynamic> weights_;
     Eigen::Matrix<NumericType, 1, Eigen::Dynamic> bias_; // this is a row vector
 
-    //store gradients
+    // store gradients
     Eigen::Matrix<NumericType, Eigen::Dynamic, Eigen::Dynamic> dWeights_;
     Eigen::Matrix<NumericType, Eigen::Dynamic, Eigen::Dynamic> dBias_;
 };

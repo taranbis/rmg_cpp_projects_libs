@@ -22,7 +22,7 @@ private:
     // 0 means messages are received at most once
     // 1 means messages are received at least once
     // 2 means messages are received exactly once
-    /*const*/ int  _qoS = 1;
+    /*const*/ int _qoS = 1;
     /*const*/ bool _noLocal = true;     // we don't want to receive our own messages
     /*const*/ bool _retainData = false; // neither to retain data
 

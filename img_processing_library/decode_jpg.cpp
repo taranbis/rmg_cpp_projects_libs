@@ -53,15 +53,15 @@ private:
     uint16_t ReadBitsFromFile(std::vector<uint8_t>::iterator& iter, int32_t len)
     {
         std::bitset<32> queueVal;
-        uint32_t        queueLen;
+        uint32_t queueLen;
 
-        uint8_t  readByte;
+        uint8_t readByte;
         uint32_t output;
 
         if (len > queueLen) {
             do {
                 readByte = *iter++;
-                queueVal = queueVal | std::bitset<32> (readByte << (24 - queueLen));
+                queueVal = queueVal | std::bitset<32>(readByte << (24 - queueLen));
                 queueLen += 8;
             } while (len > queueLen);
         }
@@ -76,7 +76,7 @@ private:
 
     int DecodeHuffmanTable(std::vector<uint8_t>::iterator& iter)
     { // pass iterator as reference to be able to move it
-        auto     tableBeginIter = iter;
+        auto tableBeginIter = iter;
         uint16_t code = 0;
 
         // First byte of a DHT segment is the table ID. between 0 and 31
@@ -100,7 +100,7 @@ private:
         for (huffmanMapIter = huffmanTables_[tableId].begin(); huffmanMapIter != huffmanTables_[tableId].end();
              huffmanMapIter++) {
             std::bitset<16> y(huffmanMapIter->first.second);
-            std::bitset<8>  z(huffmanMapIter->first.second);
+            std::bitset<8> z(huffmanMapIter->first.second);
 
             std::cout << y << " at length " << huffmanMapIter->first.first << " = " << z << std::endl;
         }
@@ -112,7 +112,7 @@ public:
     void Decode()
     {
         static int counter = 0;
-        auto       iter = imgData_.begin();
+        auto iter = imgData_.begin();
         while (iter != imgData_.end()) {
             uint16_t marker = (*iter << 8 | *(iter + 1));
 

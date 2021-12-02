@@ -8,10 +8,10 @@ int main()
     // "High"
 
     std::vector<std::string> stockDates;
-    std::vector<double>      openPrices;
-    std::vector<double>      highPrices;
-    std::vector<double>      lowPrices;
-    std::vector<double>      closePrices;
+    std::vector<double> openPrices;
+    std::vector<double> highPrices;
+    std::vector<double> lowPrices;
+    std::vector<double> closePrices;
 
     // io::generateMockData(csv);
     csv.readHeader();
@@ -19,9 +19,9 @@ int main()
 
     csv >> stockDates >> openPrices >> highPrices >> lowPrices >> closePrices;
 
-    for (auto &price : closePrices) { price += 1.1; }
+    for (auto& price : closePrices) { price += 1.1; }
 
-    for (const auto &price : closePrices) { std::cout << price << " "; }
+    for (const auto& price : closePrices) { std::cout << price << " "; }
     std::cout << std::endl;
 
     return 0;

@@ -21,7 +21,7 @@ class Warehouse
 {
 public:
     std::random_device _rd;
-    std::mt19937       _mt{_rd()};
+    std::mt19937 _mt{_rd()};
 
     /* After the travel time, the forklift stops for a duration between 5 to 10s */
     std::uniform_int_distribution<int> _stopTime;
@@ -52,7 +52,7 @@ public:
         while (!stop.load(std::memory_order_relaxed)) {
             double xPosition = _positions(_mt);
             double yPosition = _positions(_mt);
-            int    stopTime = _stopTime(_mt);
+            int stopTime = _stopTime(_mt);
 
             DEB(xPosition);
             DEB(yPosition);
@@ -83,7 +83,7 @@ public:
 // use libraries for anything
 int main()
 {
-    uint32_t                          id = 3423;
+    uint32_t id = 3423;
     std::shared_ptr<Forklift<double>> forklift = std::make_shared<Forklift<double>>(id);
 
     std::shared_ptr<Communicator> comm = std::make_shared<Communicator>("tcp://localhost:1883");

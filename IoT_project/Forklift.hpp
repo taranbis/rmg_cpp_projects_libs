@@ -67,7 +67,7 @@ private:
     };
 
     Trajectory<T> _trajectory;
-    Movement<T>   _movement;
+    Movement<T> _movement;
 
     bool _brake{false};
     bool _moving{false};

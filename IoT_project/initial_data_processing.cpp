@@ -9,7 +9,7 @@
 typedef struct PreviousData {
     uint64_t timestamp = 0;
     uint32_t id = 0;
-    float    x = 0, y = 0, z = 0;
+    float x = 0, y = 0, z = 0;
 } PreviousData;
 
 int main()
@@ -18,8 +18,8 @@ int main()
     const std::string kBrokerAddress("localhost");
     const std::string kTopicName("data/localization");
     const std::string kClientID{"procressor_1"};
-    const int         kQoS = 1;
-    const bool        kRetainData = false;
+    const int kQoS = 1;
+    const bool kRetainData = false;
 
     auto lwt = mqtt::make_message(kTopicName, "Disconnected", kQoS, kRetainData);
 
@@ -42,7 +42,7 @@ int main()
     client.set_message_callback([](mqtt::const_message_ptr msg) {
         // localization data from previous message
         static PreviousData previousData;
-        static float        totalDistance = 0;
+        static float totalDistance = 0;
 
         // Reset all values if the generator disconnected
         if (msg->get_payload_str() == "Device has disconnected") {
@@ -55,9 +55,9 @@ int main()
         }
 
         std::stringstream ss(std::move(msg->get_payload_str()));
-        uint64_t          timestamp = 0;
-        uint32_t          id = 0;
-        float             x = 0, y = 0, z = 0;
+        uint64_t timestamp = 0;
+        uint32_t id = 0;
+        float x = 0, y = 0, z = 0;
 
         if (ss >> timestamp >> id >> x >> y >> z) {
             // First message will not be considered for computation
@@ -74,7 +74,7 @@ int main()
 
             // timestamps are in milliseconds
             uint64_t time = timestamp - previousData.timestamp;
-            float    distance =
+            float distance =
                         (x - previousData.x) * (x - previousData.x) + (y - previousData.y) * (y - previousData.y);
             float xySpeed = sqrt(distance) * 1000 / time;
 

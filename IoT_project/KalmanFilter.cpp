@@ -11,18 +11,18 @@ using Matrix = typename Eigen::Matrix<double, R, C>;
 
 int main()
 {
-    double                dt = 0.1;
+    double dt = 0.1;
     constexpr std::size_t N = 4, M = 2;
 
-    std::random_device               rd;
-    std::mt19937                     mt(rd());
-    double                           measureVariance = 0.1;
-    double                           accVariance = 0.1; // how much acc may vary between measurements
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    double measureVariance = 0.1;
+    double accVariance = 0.1; // how much acc may vary between measurements
     std::normal_distribution<double> normDist(0.0, measureVariance);
 
     // TODO: pass in an initial v and an initial x for x state variable
     measureVariance = measureVariance * measureVariance;
-    Matrix<M, M>   R{{measureVariance, 0}, {0, measureVariance}};
+    Matrix<M, M> R{{measureVariance, 0}, {0, measureVariance}};
     Kalman<double> kalmanFilter(dt, R, accVariance * accVariance);
 
     Vector<M> measured = Vector<M>::Zero();

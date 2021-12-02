@@ -5,11 +5,11 @@
 /**
  * @brief Performs vanilla stochastic gradient descent.
  */
-void sgd(Eigen::MatrixXd &w, const Eigen::MatrixXd &dw, double learningRate = 1e-3)
+void sgd(Eigen::MatrixXd& w, const Eigen::MatrixXd& dw, double learningRate = 1e-3)
 {
     w -= learningRate * dw;
 }
 
-//TODO: implement interface Optimizer;implement classes Adam and SGD
+// TODO: implement interface Optimizer;implement classes Adam and SGD
 
 #endif //!_OPTIM_HEADER_HPP_

@@ -13,7 +13,7 @@ private:
     std::vector<std::unique_ptr<Layer<double>>> layers_;
 
 public:
-    Sequential &operator<<(std::unique_ptr<Layer<NumericType>> &&other)
+    Sequential& operator<<(std::unique_ptr<Layer<NumericType>>&& other)
     {
         layers_.emplace_back(std::move(other));
         return *this;
@@ -23,7 +23,7 @@ public:
     {
         Eigen::MatrixXd res = x;
 
-        for (auto &layer : layers_) {
+        for (auto& layer : layers_) {
             // res = (*layer)(res);
             res = layer->operator()(res);
         }
@@ -41,12 +41,12 @@ public:
 
     void zeroGrads()
     {
-        for (auto &layer : layers_) layer->zeroGrads();
+        for (auto& layer : layers_) layer->zeroGrads();
     }
 
     void updateParams(double learningRate)
     {
-        for (auto &layer : layers_) layer->updateParams(learningRate);
+        for (auto& layer : layers_) layer->updateParams(learningRate);
     }
 };
 

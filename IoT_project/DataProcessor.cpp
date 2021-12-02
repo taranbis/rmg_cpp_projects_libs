@@ -35,16 +35,16 @@ class DataProcessor
 
     std::unique_ptr<Filter> _filterPtr;
 
-    const bool        _outputToFile = true;
+    const bool _outputToFile = true;
     const std::string _fileName;
-    std::ofstream     outputFile;
+    std::ofstream outputFile;
 
 public:
     /* or maybe put N, M, accVariance as parameters for process */
     DataProcessor(T accVariance = 0.5, const std::string& fileName = {"ProcessedData.txt"})
             : _accVariance(accVariance), _fileName(fileName), outputFile(_fileName)
     {
-        const T                  measureVariance = Sensor::measureVariance * Sensor::measureVariance;
+        const T measureVariance = Sensor::measureVariance * Sensor::measureVariance;
         Matrix<numMeas, numMeas> R{{measureVariance, 0}, {0, measureVariance}};
 
         /* Set initial boundary values */
@@ -56,9 +56,9 @@ public:
 
     void Process(std::string&& msg)
     {
-        static T          previousTimestamp = 0;
+        static T previousTimestamp = 0;
         std::stringstream ss(std::move(msg));
-        Vector<numMeas>   measured;
+        Vector<numMeas> measured;
 
         T x = 0, y = 0, z = 0, timestamp = 0;
 

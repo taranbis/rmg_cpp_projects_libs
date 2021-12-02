@@ -2,7 +2,7 @@
 #define DATA_UTILS_HEADER_HPP 1
 #pragma once
 
-#include<stddef.h>
+#include <stddef.h>
 #include <fstream>
 #include <iostream>
 
@@ -11,9 +11,8 @@
 #include "util.hpp"
 #include <cstdio>
 
-
-template<std::size_t batchDim>
-std::pair<Eigen::MatrixXd, Eigen::MatrixXd> loadBatchCIFAR10(const char *fileName)
+template <std::size_t batchDim>
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd> loadBatchCIFAR10(const char* fileName)
 {
     std::fstream file;
     file.open(fileName, std::ios::in | std::ios::binary | std::ios::ate);
@@ -42,10 +41,10 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> loadBatchCIFAR10(const char *fileNam
 
     // Each file contains 10000 such 3073-byte "rows" of images
     for (std::size_t i = 0; i < batchDim; ++i) {
-        if (!file.read((char *)&label, sizeof(label))) std::cerr << "Error reading label" << std::endl;
-        if (!file.read((char *)&rChannel, 1024)) std::cerr << "Error red channel label" << std::endl;
-        if (!file.read((char *)&gChannel, 1024)) std::cerr << "Error green channel label" << std::endl;
-        if (!file.read((char *)&bChannel, 1024)) std::cerr << "Error blue channel label" << std::endl;
+        if (!file.read((char*)&label, sizeof(label))) std::cerr << "Error reading label" << std::endl;
+        if (!file.read((char*)&rChannel, 1024)) std::cerr << "Error red channel label" << std::endl;
+        if (!file.read((char*)&gChannel, 1024)) std::cerr << "Error green channel label" << std::endl;
+        if (!file.read((char*)&bChannel, 1024)) std::cerr << "Error blue channel label" << std::endl;
 
         labels(i, 0) = label;
         for (std::size_t j = 0; j < imgByteLength / 3; ++j) {
@@ -64,4 +63,4 @@ void getDataCIFAR10(size_t numTraining, size_t numValidation, size_t numTest);
 
 double scoreFunction(double x, double linExpBoundary, double doublingRate);
 
-#endif //!DATA_UTILS_HEADER_HPP
+#endif //! DATA_UTILS_HEADER_HPP

@@ -10,7 +10,7 @@
 typedef struct Forklift {
     // uint64_t timestamp;
     uint32_t id;
-    float    x, y, z;
+    float x, y, z;
 
     Forklift(uint32_t tag) : id(tag) {}
 
@@ -28,10 +28,10 @@ void publish(std::string payload);
 int main()
 {
     std::random_device device;
-    std::mt19937       gen{device()};
+    std::mt19937 gen{device()};
     // 0.3 is composed such that when composing speed per x and y it will lead to a maximum of 15 km/h
-    std::uniform_real_distribution<float>   disXY(0.0, 0.3);
-    std::uniform_real_distribution<float>   disZ(0.0, 0.05);
+    std::uniform_real_distribution<float> disXY(0.0, 0.3);
+    std::uniform_real_distribution<float> disZ(0.0, 0.05);
     std::uniform_int_distribution<uint32_t> idDis(0, std::numeric_limits<uint32_t>::max());
 
     // For a duration between 15s to 60s the forklift will travel
@@ -47,10 +47,10 @@ int main()
     Forklift forkLift(idDis(gen));
 
     const auto kPeriod = std::chrono::milliseconds(100);
-    auto       start = std::chrono::high_resolution_clock::now();
-    bool       moving = true;
-    uint32_t   travelTime = travelTimeDis(gen) * 1000;
-    uint32_t   stopTime = stopTimeDis(gen) * 1000;
+    auto start = std::chrono::high_resolution_clock::now();
+    bool moving = true;
+    uint32_t travelTime = travelTimeDis(gen) * 1000;
+    uint32_t stopTime = stopTimeDis(gen) * 1000;
 
     while (true) {
         // end         = std::chrono::high_resolution_clock::now();
@@ -93,7 +93,7 @@ int main()
         // send update values every 100 milliseconds
         std::this_thread::sleep_for(kPeriod);
         std::string payload;
-        auto        timestamp = (uint64_t)std::chrono::duration_cast<std::chrono::milliseconds>(
+        auto timestamp = (uint64_t)std::chrono::duration_cast<std::chrono::milliseconds>(
                                      std::chrono::system_clock::now().time_since_epoch())
                                      .count();
         payload += std::to_string(timestamp) + " ";
@@ -110,17 +110,17 @@ int main()
 typedef struct PreviousData {
     uint64_t timestamp = -1;
     uint32_t id = -1;
-    float    x = 0.0f, y = 0.0f, z = 0.0f;
+    float x = 0.0f, y = 0.0f, z = 0.0f;
 } PreviousData;
 
 void publish(std::string msg)
 {
     static PreviousData previousData;
-    static float        totalDistance;
-    std::stringstream   ss(std::move(msg));
-    uint64_t            timestamp = -1;
-    uint32_t            id = -1;
-    float               x = 0.0f, y = 0.0f, z = 0.0f;
+    static float totalDistance;
+    std::stringstream ss(std::move(msg));
+    uint64_t timestamp = -1;
+    uint32_t id = -1;
+    float x = 0.0f, y = 0.0f, z = 0.0f;
 
     if (ss >> timestamp >> id >> x >> y >> z) {
         // In case of multiple forklifts, we would also check and

@@ -9,14 +9,12 @@
 #include "layer_utils.hpp"
 #include "sequential.hpp"
 
-
 int actualMain();
 
 template <typename Derived>
-void printSize(const Eigen::MatrixBase<Derived> &b) // EigenBase instead of MatrixBase works as well
+void printSize(const Eigen::MatrixBase<Derived>& b) // EigenBase instead of MatrixBase works as well
 {
-    std::cout << "size; (rows, cols): " << b.size() << "; (" << b.rows() << ", " << b.cols() << ")"
-              << std::endl;
+    std::cout << "size; (rows, cols): " << b.size() << "; (" << b.rows() << ", " << b.cols() << ")" << std::endl;
 }
 
 // int main(){
@@ -35,13 +33,14 @@ void printSize(const Eigen::MatrixBase<Derived> &b) // EigenBase instead of Matr
 int main()
 {
     constexpr size_t batchDim = 100; // numbers of images in a batch;
-    constexpr size_t D_in = 3072 /* input dim */, H1 = 1024 /* hidden dim */, H2 = 256/* hidden dim */, D_out = 10 /* output dim */;
+    constexpr size_t D_in = 3072 /* input dim */, H1 = 1024 /* hidden dim */, H2 = 256 /* hidden dim */,
+                     D_out = 10 /* output dim */;
 
-    auto fc1  = std::unique_ptr<Linear<double, batchDim, D_in, H1>>(new Linear<double, batchDim, D_in, H1>());
+    auto fc1 = std::unique_ptr<Linear<double, batchDim, D_in, H1>>(new Linear<double, batchDim, D_in, H1>());
     auto relu = std::unique_ptr<ReLU<double>>(new ReLU<double>());
-    auto fc2  = std::unique_ptr<Linear<double, batchDim, H1, H2>>(new Linear<double, batchDim, H1, H2>());
+    auto fc2 = std::unique_ptr<Linear<double, batchDim, H1, H2>>(new Linear<double, batchDim, H1, H2>());
     auto relu2 = std::unique_ptr<ReLU<double>>(new ReLU<double>());
-    auto fc3  = std::unique_ptr<Linear<double, batchDim, H2, D_out>>(new Linear<double, batchDim, H2, D_out>());
+    auto fc3 = std::unique_ptr<Linear<double, batchDim, H2, D_out>>(new Linear<double, batchDim, H2, D_out>());
     // auto lossFn = std::unique_ptr<L2Loss<double, batchDim, D_out>>;
 
     Sequential<double, batchDim, D_in, D_out> model;
@@ -63,7 +62,7 @@ int main()
         y_pred = model(x);
 
         double loss = lossFn(y_pred, y);
-        //this is the accuracy
+        // this is the accuracy
         /* if (i % 100 == 99) */ std::cout << "loss: " << loss << std::endl;
 
         model.zeroGrads();
