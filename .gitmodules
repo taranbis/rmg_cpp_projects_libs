@@ -7,3 +7,6 @@
 [submodule "vendors/phmap_parallel_hashmap"]
 	path = vendors/phmap_parallel_hashmap
 	url = https://github.com/greg7mdp/parallel-hashmap
+[submodule "vendors/google_benchmark"]
+	path = vendors/google_benchmark
+	url = https://github.com/google/benchmark.git

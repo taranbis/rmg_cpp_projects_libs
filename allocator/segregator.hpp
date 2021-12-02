@@ -25,6 +25,10 @@ private:
 
     void do_deallocate(void* p, std::size_t numBytes, std::size_t alignment) override
     {
+        if (!p) {
+            return;
+        }
+
         if (numBytes <= threshold_) {
             smallAllocator_->deallocate(p, numBytes, alignment);
             return;

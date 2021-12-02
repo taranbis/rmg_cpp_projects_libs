@@ -14,9 +14,9 @@
 #include "util.hpp"
 
 /********************************************************************************
- * Header file that defines the profiling class ProfTimer used to benchmark code
- * on the principle of RAII along with other useful commands used for debugging
- * and profiling
+ *! Header file that defines the profiling class ProfTimer used to benchmark code
+ *! on the principle of RAII along with other useful commands used for debugging
+ *! and profiling
  *******************************************************************************/
 
 #define PROF_START_BLOCK(name) \
