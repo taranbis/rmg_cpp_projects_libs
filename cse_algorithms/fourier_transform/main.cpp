@@ -55,8 +55,11 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
 
         sf::CircleShape runningPoint(4);
         for (size_t i = 0; i < N; ++i) {
-            std::size_t n = i * 2 + 1;
-            std::size_t radius = baseRadius * (4 / (n * M_PI));
+			// Square wave
+            // std::size_t n = i * 2 + 1;
+            // double radius = baseRadius * (4 / (n * M_PI));
+
+            double radius = baseRadius * (2 / ((i+1) * pow(-1, i+1) * M_PI));
 
             sf::CircleShape circle(radius);
             circle.setOutlineColor(colors[i]);
@@ -75,11 +78,19 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
             }
             circle.setOrigin(circle.getRadius(), circle.getRadius());
 
-            x_sum += radius * cos(n * time);
-            y_sum += radius * sin(n * time);
+			// Square wave
+            // x_sum += radius * cos(n * time);
+            // y_sum += radius * sin(n * time);
 
-            double x = radius * cos(n * time);
-            double y = radius * sin(n * time);
+            // double x = radius * cos(n * time);
+            // double y = radius * sin(n * time);
+
+			//  sawtooth wave
+            x_sum += radius * cos((i+1) * time);
+            y_sum += radius * sin((i+1) * time);
+
+            double x = radius * cos((i+1) * time);
+            double y = radius * sin((i+1) * time);
 
             runningPoint.setOutlineColor(colors[i]);
             runningPoint.setFillColor(colors[i]);
