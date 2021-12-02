@@ -7,7 +7,7 @@
 #include "Sensor.hpp"
 
 template <std::size_t S>
-using Vector = typename Eigen::Vector<double, S>;
+using Vector = typename Eigen::Matrix<double, S, 1>;
 
 template <std::size_t R, std::size_t C>
 using Matrix = typename Eigen::Matrix<double, R, C>;
@@ -44,8 +44,9 @@ public:
     DataProcessor(T accVariance = 0.5, const std::string& fileName = {"ProcessedData.txt"})
             : _accVariance(accVariance), _fileName(fileName), outputFile(_fileName)
     {
-        const T measureVariance = Sensor::measureVariance * Sensor::measureVariance;
-        Matrix<numMeas, numMeas> R{{measureVariance, 0}, {0, measureVariance}};
+        constexpr T measureVariance = Sensor::measureVariance * Sensor::measureVariance;
+        Matrix<numMeas, numMeas> R{};
+        R << measureVariance, 0.0, 0.0, measureVariance;
 
         /* Set initial boundary values */
         Vector<numVars> x = Vector<numVars>::Zero();

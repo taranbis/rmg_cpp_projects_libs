@@ -35,8 +35,6 @@ private:
     std::unordered_map<std::string, mqtt::topic> _topics;
 
 public:
-    Communicator() = default;
-
     Communicator(const std::string& brokerAddress)
             : _brokerAddress(brokerAddress), _client(brokerAddress, ""), _topics()
     {

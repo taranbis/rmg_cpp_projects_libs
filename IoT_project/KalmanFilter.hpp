@@ -18,7 +18,7 @@ class KalmanFilter
 {
 public:
     template <std::size_t S>
-    using Vector = typename Eigen::Vector<T, S>;
+    using Vector = typename Eigen::Matrix<T, S, 1>;
 
     template <std::size_t R, std::size_t C>
     using Matrix = typename Eigen::Matrix<T, R, C>;

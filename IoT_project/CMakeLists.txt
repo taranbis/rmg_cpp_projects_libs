@@ -4,8 +4,8 @@ project(Kinexon VERSION 0.1.0)
 # add_executable(Test "Test.cpp")
 # add_executable(KalmanFilterTest "KalmanFilter.cpp")
 
-add_executable(DataGenerator "DataGenerator.cpp")
-add_executable(DataProcessor "DataProcessor.cpp")
+add_executable(DataGenerator "generator.cpp")
+add_executable(DataProcessor "processor.cpp")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/eigen/cmake")
 
