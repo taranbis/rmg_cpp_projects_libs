@@ -29,7 +29,7 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
     // TODO: builder pattern to build points
 
     // Number of waves (circles) stacked (added)
-    std::size_t N = 4;
+    std::size_t N = 100;
 
     std::vector<sf::Color> colors{sf::Color::Red,    sf::Color::Green,   sf::Color::Blue,
                                   sf::Color::Yellow, sf::Color::Magenta, sf::Color::Cyan};
@@ -54,6 +54,7 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
         double y_sum = 0;
 
         sf::CircleShape runningPoint(4);
+        //TODO: create a slider to select number of N
         for (size_t i = 0; i < N; ++i) {
 			// Square wave
             // std::size_t n = i * 2 + 1;
