@@ -220,15 +220,16 @@ static void hexdump(FILE* fp, const char* name, const void* ptr, size_t len)
     }
 }
 
-template <typename Type>
-void swap(Type*& i, Type*& j)
+
+template <std::move_constructible Type>
+void swap(Type& i, Type& j)
 {
     // copy constructor
-    Type aux = i;
+    Type aux = std::move(i);
 
     // copy operation
-    i = j;
-    j = aux;
+    i = std::move(j);
+    j = std::move(aux);
 }
 
 /**
