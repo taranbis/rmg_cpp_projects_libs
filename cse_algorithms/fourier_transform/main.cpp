@@ -10,6 +10,10 @@
 
 #include "util.hpp"
 
+/********************************************************************************
+ *      Draw sawtooth and/or step function
+ *******************************************************************************/
+
 void calculateFFT()
 {
     // DEB_SHORT(elapsedTime);
@@ -25,11 +29,12 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
     sf::Clock clock{};
     double time = 0;
     std::deque<sf::CircleShape> wave{};
+    std::deque< std::array<sf::Vertex, 2>> waveLines{};
 
     // TODO: builder pattern to build points
 
     // Number of waves (circles) stacked (added)
-    std::size_t N = 100;
+    std::size_t N = 500;
 
     std::vector<sf::Color> colors{sf::Color::Red,    sf::Color::Green,   sf::Color::Blue,
                                   sf::Color::Yellow, sf::Color::Magenta, sf::Color::Cyan};
@@ -121,14 +126,32 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
             wavePoint.setPosition(wavePoint.getPosition().x + 1, wavePoint.getPosition().y);
         }
 
+        for (std::array<sf::Vertex, 2>& waveLine : waveLines) {
+            waveLine[0].position =  sf::Vector2f(waveLine[0].position.x + 1, waveLine[0].position.y);
+            waveLine[1].position =  sf::Vector2f(waveLine[1].position.x + 1, waveLine[1].position.y);
+        }
+
         // Generate wave point
-        sf::CircleShape newWavePoint(2.5);
+        sf::CircleShape newWavePoint(0.5);
         newWavePoint.setOutlineColor(sf::Color::Blue);
         newWavePoint.setFillColor(sf::Color::Blue);
         newWavePoint.setOrigin(newWavePoint.getRadius(), newWavePoint.getRadius());
         newWavePoint.setPosition(mainX + 250, mainY + y_sum);
+
+        if (wave.size() != 0) {
+            std::array<sf::Vertex, 2> newWaveLine = std::array<sf::Vertex, 2>{
+                        sf::Vertex(sf::Vector2f(wave.front().getPosition().x, wave.front().getPosition().y),
+                                   newWavePoint.getFillColor()),
+                        sf::Vertex(sf::Vector2f(newWavePoint.getPosition().x, newWavePoint.getPosition().y),
+                                   newWavePoint.getFillColor())};
+
+            waveLines.emplace_front(newWaveLine);
+        }
         wave.emplace_front(newWavePoint);
-        if (wave.rbegin()->getPosition().x > window->getSize().x) wave.pop_back();
+        if (wave.rbegin()->getPosition().x > window->getSize().x) {
+            waveLines.pop_back();
+            wave.pop_back();
+        }
 
         sf::Vertex connectLine[] = {
                     sf::Vertex(sf::Vector2f(runningPoint.getPosition().x, runningPoint.getPosition().y),
@@ -141,7 +164,13 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
         // DEB_SHORT(wave.size());
         // NEWLINE();
 
-        for (const sf::CircleShape& wavePoint : wave) window->draw(wavePoint);
+        for (const sf::CircleShape& wavePoint : wave){
+            window->draw(wavePoint);
+        } 
+        for (const std::array<sf::Vertex, 2>& waveLine : waveLines){
+            window->draw(waveLine.data(), 2, sf::Lines);
+        } 
+            
 
         window->display();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
