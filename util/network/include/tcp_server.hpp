@@ -8,18 +8,17 @@ class TCPServer
 {
 public:
     TCPConnHandler& tcpHandler_;
-    TCPConnInfo     data_;
+    std::unique_ptr<TCPConnection> tcpConn_;
 
 public:
     TCPServer(TCPConnHandler& tcpHandler) : tcpHandler_(tcpHandler) {}
+
     void start(const std::string& sourceAddress, uint16_t sourcePort)
     {
-        // return startListen(sourceAddress, sourcePort);
-        data_ = tcpHandler_.openListenSocket(sourceAddress, sourcePort);
-
-        std::thread th(&TCPConnHandler::checkForConnections, &tcpHandler_, data_);
-        th.detach();
+        tcpConn_ = tcpHandler_.openListenSocket(sourceAddress, sourcePort);
     }
+
+    //TODO: add function that does sth when new connection appears;
 };
 
 #endif
