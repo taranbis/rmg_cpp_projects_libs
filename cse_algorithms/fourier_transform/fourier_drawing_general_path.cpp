@@ -10,9 +10,10 @@
 #include <SFML/Graphics.hpp>
 
 #include "util.hpp"
+#include "drawing_coords.hpp"
 
 /********************************************************************************
- *      Draw sawtooth and/or step function
+ *  TODO: fix this
  *******************************************************************************/
 
 struct Epicycle {
@@ -21,6 +22,17 @@ struct Epicycle {
     double phase_{};
 
     Epicycle(double freq, double ampl, double phase) : freq_(freq), ampl_(ampl), phase_(phase) {}
+
+    Epicycle(const Epicycle& other) = default;
+
+    Epicycle& operator=(const Epicycle& other) = default; /* {
+         if (this == &other) return *this;
+
+         this->freq_ = other.freq_;
+         this->ampl_ = other.ampl_;
+         this->phase_ = other.phase_;
+         return *this;
+     } */
 
     friend std::ostream& operator<<(std::ostream& os, const Epicycle& epicycle)
     {
@@ -57,10 +69,9 @@ std::vector<Epicycle> computeDFT(const std::vector<double>& discreteFunction)
     return epicyles;
 }
 
-std::pair<sf::Vector2<double>, sf::Vector2<double>> drawEpicycle(sf::RenderWindow* window, const std::vector<Epicycle>& fourierSignal,
-                                 std::deque<sf::CircleShape>& wave,
-                                 std::deque<std::array<sf::Vertex, 2>>& waveLines, double time, double originX,
-                                 double originY, const std::vector<sf::Color>& colors, double rotation)
+std::pair<sf::Vector2<double>, sf::Vector2<double>> drawEpicycle(
+            sf::RenderWindow* window, const std::vector<Epicycle>& fourierSignal,
+            double time, double originX, double originY, const std::vector<sf::Color>& colors, double rotation)
 {
     std::vector<sf::CircleShape> circles{};
     std::vector<sf::CircleShape> runningPoints{};
@@ -120,36 +131,36 @@ std::pair<sf::Vector2<double>, sf::Vector2<double>> drawEpicycle(sf::RenderWindo
     lines.clear();
 
     // TODO: make lines between wave points
-    for (sf::CircleShape& wavePoint : wave) {
-        wavePoint.setPosition(wavePoint.getPosition().x + 1, wavePoint.getPosition().y);
-    }
+    // for (sf::CircleShape& wavePoint : wave) {
+    //     wavePoint.setPosition(wavePoint.getPosition().x + 1, wavePoint.getPosition().y);
+    // }
 
-    for (std::array<sf::Vertex, 2>& waveLine : waveLines) {
-        waveLine[0].position = sf::Vector2f(waveLine[0].position.x + 1, waveLine[0].position.y);
-        waveLine[1].position = sf::Vector2f(waveLine[1].position.x + 1, waveLine[1].position.y);
-    }
+    // for (std::array<sf::Vertex, 2>& waveLine : waveLines) {
+    //     waveLine[0].position = sf::Vector2f(waveLine[0].position.x + 1, waveLine[0].position.y);
+    //     waveLine[1].position = sf::Vector2f(waveLine[1].position.x + 1, waveLine[1].position.y);
+    // }
 
-    // Generate wave point
-    sf::CircleShape newWavePoint(0.5);
-    newWavePoint.setOutlineColor(sf::Color::Blue);
-    newWavePoint.setFillColor(sf::Color::Blue);
-    newWavePoint.setOrigin(newWavePoint.getRadius(), newWavePoint.getRadius());
-    newWavePoint.setPosition(originX + 250, originY + y_sum);
+    // // Generate wave point
+    // sf::CircleShape newWavePoint(0.5);
+    // newWavePoint.setOutlineColor(sf::Color::Blue);
+    // newWavePoint.setFillColor(sf::Color::Blue);
+    // newWavePoint.setOrigin(newWavePoint.getRadius(), newWavePoint.getRadius());
+    // newWavePoint.setPosition(originX + 250, originY + y_sum);
 
-    if (wave.size() != 0) {
-        const std::array<sf::Vertex, 2> newWaveLine = std::array<sf::Vertex, 2>{
-                    sf::Vertex(sf::Vector2f(wave.front().getPosition().x, wave.front().getPosition().y),
-                               newWavePoint.getFillColor()),
-                    sf::Vertex(sf::Vector2f(newWavePoint.getPosition().x, newWavePoint.getPosition().y),
-                               newWavePoint.getFillColor())};
+    // if (wave.size() != 0) {
+    //     const std::array<sf::Vertex, 2> newWaveLine = std::array<sf::Vertex, 2>{
+    //                 sf::Vertex(sf::Vector2f(wave.front().getPosition().x, wave.front().getPosition().y),
+    //                            newWavePoint.getFillColor()),
+    //                 sf::Vertex(sf::Vector2f(newWavePoint.getPosition().x, newWavePoint.getPosition().y),
+    //                            newWavePoint.getFillColor())};
 
-        waveLines.emplace_front(newWaveLine);
-    }
-    wave.emplace_front(newWavePoint);
-    if (wave.rbegin()->getPosition().x > window->getSize().x) {
-        waveLines.pop_back();
-        wave.pop_back();
-    }
+    //     waveLines.emplace_front(newWaveLine);
+    // }
+    // wave.emplace_front(newWavePoint);
+    // if (wave.rbegin()->getPosition().x > window->getSize().x) {
+    //     waveLines.pop_back();
+    //     wave.pop_back();
+    // }
     return {{runningPoint.getPosition().x, runningPoint.getPosition().y}, {x, y}};
 }
 
@@ -159,10 +170,10 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
     const double midX = window->getSize().x / 2.;
     const double midY = window->getSize().y / 2.;
     double time = 0;
-    std::deque<sf::CircleShape> waveY{};
-    std::deque<std::array<sf::Vertex, 2>> waveLinesY{};
-    std::deque<sf::CircleShape> waveX{};
-    std::deque<std::array<sf::Vertex, 2>> waveLinesX{};
+    // std::deque<sf::CircleShape> waveY{};
+    // std::deque<std::array<sf::Vertex, 2>> waveLinesY{};
+    // std::deque<sf::CircleShape> waveX{};
+    // std::deque<std::array<sf::Vertex, 2>> waveLinesX{};
 
     // TODO: builder pattern to build points
     const std::vector<sf::Color> colors{sf::Color::Red,    sf::Color::Green,   sf::Color::Blue,
@@ -172,38 +183,36 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
     // const double mainY = midY;
 
     // number of points for the discrete function
-    std::size_t N = 10;
+    const std::size_t N = drawingCoords.size();
     // fourierSignal = fourier(signal)
 
-    std::vector<double> funcY{};
     std::vector<double> funcX{};
-    for (std::size_t i = 0; i < N; ++i) {
-        funcY.emplace_back(150 * cos(i * 2. * M_PI / N));
-        funcX.emplace_back(150 * sin(i * 2. * M_PI / N));
-        // if(i / 10 % 10 == 0){
-        // 	funcY.emplace_back(100);
-        // }else{
-        // 	funcY.emplace_back(-100);
+    std::vector<double> funcY{};
+    for (std::size_t i = 0; i < N; i += 10) {
+        // funcY.emplace_back(150 * cos(i * 2. * M_PI / N));
+        // funcX.emplace_back(150 * sin(i * 2. * M_PI / N));
 
-        // }
+        funcX.emplace_back(drawingCoords[i].x + 250);
+        funcY.emplace_back(drawingCoords[i].y + 250);
     }
-    const std::vector<Epicycle> fourierSignalY = computeDFT(funcY);
     const std::vector<Epicycle> fourierSignalX = computeDFT(funcX);
+    const std::vector<Epicycle> fourierSignalY = computeDFT(funcY);
+
+    // sort(fourierSignalY.begin(), fourierSignalY.end(), [](const Epicycle& epicycle1, const Epicycle& epicycle2)
+    // { return epicycle1.ampl_ > epicycle2.ampl_; }); sort(fourierSignalX.begin(), fourierSignalX.end(), [](const
+    // Epicycle& epicycle1, const Epicycle& epicycle2) { return epicycle1.ampl_ > epicycle2.ampl_; });
 
     std::deque<sf::Vector2<double>> path{};
-
     while (!stopProgram->load(std::memory_order_relaxed) && window->isOpen()) {
         window->clear(sf::Color::Black);
 
-        const double dt = M_PI * 0.01 / N;
+        const double dt = M_PI * 2 / N;
         time += dt;
 
-        auto [runningPointY, vy] =
-                    drawEpicycle(window.get(), fourierSignalY, waveY, waveLinesY, time, 1000, 200, colors, M_PI_2);
-        auto [runningPointX, vx]  =
-                    drawEpicycle(window.get(), fourierSignalX, waveX, waveLinesX, time, 200, 500, colors, 0);
+        auto [runningPointY, vy] = drawEpicycle(window.get(), fourierSignalY, time, 1000, 200, colors, M_PI_2);
+        auto [runningPointX, vx] = drawEpicycle(window.get(), fourierSignalX, time, 200, 500, colors, 0);
 
-        path.emplace_front(1000 + vx.x, 500 + vy.y);
+        path.emplace_front(midX + vx.x, midY + vy.y);
 
         for (const auto& pathPoint : path) {
             sf::CircleShape circle(0.5);
@@ -212,9 +221,8 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
             circle.setOutlineThickness(1);
             circle.setPosition(pathPoint.x, pathPoint.y);
             circle.setOrigin(circle.getRadius(), circle.getRadius());
-			window->draw(circle);
+            window->draw(circle);
         }
-
 
         const sf::Vertex line1[] = {sf::Vertex(sf::Vector2f(runningPointX.x, runningPointX.y), sf::Color::White),
                                     sf::Vertex(sf::Vector2f(path.front().x, path.front().y), sf::Color::White)};
@@ -235,8 +243,8 @@ int main()
 {
     std::atomic<bool> stopProgram{false};
 
-    constexpr double sizeX = 1500.;
-    constexpr double sizeY = 700.;
+    constexpr double sizeX = 20000.;
+    constexpr double sizeY = 1000.;
 
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
