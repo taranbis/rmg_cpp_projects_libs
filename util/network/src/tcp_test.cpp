@@ -1,4 +1,4 @@
-#include "tcp_handler.hpp"
+#include "tcp_connection_manager.hpp"
 #include "tcp_connection.hpp"
 #include "tcp_server.hpp"
 
@@ -10,13 +10,13 @@
 int main()
 {
     std::atomic<bool> finish{false};
-    TCPConnHandler handler;
+    TCPConnectionManager handler;
     TCPServer server(handler);
     server.start("127.0.0.1", 12301);
 
     std::vector<std::shared_ptr<TCPConnection>> connections;
 
-    auto printingFunction = [=](std::vector<char> buffer) {
+    auto printingFunction = [](std::vector<char> buffer) {
         std::cout << "[main] ----- Number of bytes read: " << buffer.size() << std::endl;
         std::cout << "[main] ----- Message: ";
 

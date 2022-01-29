@@ -2,7 +2,7 @@
 #define _TCP_CONNECTION_HEADER_HPP_ 1
 #pragma once
 
-class TCPConnHandler;
+class TCPConnectionManager;
 
 struct TCPKeepAliveInfo {
 };
@@ -16,7 +16,7 @@ struct TCPConnInfo {
 class TCPConnection
 {
 public:
-    TCPConnection(TCPConnInfo data) : /* tcpHandler_(tcpHandler), */ connData_(data) {}
+    TCPConnection(TCPConnInfo data) : connData_(data) {}
     TCPConnection(const TCPConnection& other) = delete;
 
     void stop()
@@ -47,6 +47,10 @@ public:
         while (!finish.load(std::memory_order_relaxed)) {
             int valread = read(connData_.sockfd, (void*)buffer.get(), 1024);
             if (valread != -1) {
+                if (valread == 0) {
+                    stop();
+                    return;
+                }
                 if (printReceivedData) {
                     std::cout << "Number of bytes read: " << valread << std::endl;
                     std::cout << "Message: " << std::endl;
@@ -67,12 +71,11 @@ public:
     boost::signals2::signal<void(std::vector<char> )> newBytesIncomed;
 
 private:
-    // TCPConnHandler& tcpHandler_;
     std::atomic<bool> finish{false};
     TCPConnInfo connData_;
     bool printReceivedData {false};
 
-    friend class TCPConnHandler;
+    friend class TCPConnectionManager;
 };
 
 #endif //!_TCP_CONNECTION_HEADER_HPP_

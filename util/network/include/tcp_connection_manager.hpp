@@ -1,5 +1,5 @@
-#ifndef _TCP_HANDLER_HEADER_HPP_
-#define _TCP_HANDLER_HEADER_HPP_ 1
+#ifndef _TCP_CONNECTION_MANAGER_HEADER_HPP_
+#define _TCP_CONNECTION_MANAGER_HEADER_HPP_ 1
 #pragma once
 
 #include <string>
@@ -22,7 +22,7 @@
 #include "tcp_connection.hpp"
 
 // TODO: maybe create a TCPSocket class with which this can work -> I already have
-class TCPConnHandler
+class TCPConnectionManager
 {
 public:
     boost::signals2::signal<void(std::shared_ptr<TCPConnection>)> newConnection;
@@ -32,7 +32,7 @@ private:
     std::vector<TCPConnection*> connections_;
 
 public:
-    ~TCPConnHandler()
+    ~TCPConnectionManager()
     {
         for (TCPConnection* conn : connections_) conn->stop();
     }
@@ -158,7 +158,7 @@ public:
 
         const TCPConnInfo connInfo{.sockfd = sockfd, .peerIP = ipAddr, .peerPort = port};
         std::unique_ptr<TCPConnection> conn{new TCPConnection(connInfo)};
-        std::thread th(&TCPConnHandler::checkForConnections, this, conn.get());
+        std::thread th(&TCPConnectionManager::checkForConnections, this, conn.get());
         th.detach();
         connections_.push_back(conn.get());
         return conn;
