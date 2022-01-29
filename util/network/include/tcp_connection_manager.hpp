@@ -1,5 +1,5 @@
-#ifndef _TCP_HANDLER_HEADER_HPP
-#define _TCP_HANDLER_HEADER_HPP 1
+#ifndef _TCP_CONNECTION_MANAGER_HEADER_HPP_
+#define _TCP_CONNECTION_MANAGER_HEADER_HPP_ 1
 #pragma once
 
 #include <string>
@@ -19,39 +19,31 @@
 #include <boost/signals2.hpp>
 
 #include "tcp_util.hpp"
-
-struct TCPKeepAliveInfo {
-};
-
-struct TCPConnInfo {
-    int         sockfd = -1;
-    std::string peerIP;
-    uint16_t    peerPort;
-};
+#include "tcp_connection.hpp"
 
 // TODO: maybe create a TCPSocket class with which this can work -> I already have
-class TCPConnHandler
+class TCPConnectionManager
 {
 public:
-    boost::signals2::signal<void(TCPConnInfo)> newConnection;
-    std::atomic<bool>                          finish{false};
+    boost::signals2::signal<void(std::shared_ptr<TCPConnection>)> newConnection;
+    std::atomic<bool> finish{false};
 
 private:
-    std::vector<TCPConnInfo> connections_;
+    std::vector<TCPConnection*> connections_;
 
 public:
-    ~TCPConnHandler()
+    ~TCPConnectionManager()
     {
-        for (const auto& conn : connections_) close(conn.sockfd);
+        for (TCPConnection* conn : connections_) conn->stop();
     }
 
-    TCPConnInfo openConnection(const std::string& destAddress, uint16_t destPort)
+    std::unique_ptr<TCPConnection> openConnection(const std::string& destAddress, uint16_t destPort)
     {
         return openConnection(destAddress, destPort, std::string(), 0);
     }
 
-    TCPConnInfo openConnection(const std::string& destAddress, uint16_t destPort, const std::string& sourceAddress,
-                               uint16_t sourcePort)
+    std::unique_ptr<TCPConnection> openConnection(const std::string& destAddress, uint16_t destPort,
+                                                  const std::string& sourceAddress, uint16_t sourcePort)
     {
         if (destAddress.empty()) {
             std::cerr << "Destination address not provided" << std::endl;
@@ -98,16 +90,13 @@ public:
             return {};
         }
 
-        TCPConnInfo data;
-        data.peerIP = destAddress;
-        data.sockfd = sockfd;
-        data.peerPort = destPort;
-
-        connections_.push_back(data);
-        return data;
+        const TCPConnInfo connInfo{.sockfd = sockfd, .peerIP = destAddress, .peerPort = destPort};
+        std::unique_ptr<TCPConnection> conn{new TCPConnection(connInfo)};
+        connections_.push_back(conn.get());
+        return conn;
     }
 
-    TCPConnInfo start(const std::string& ipAddr, uint16_t port)
+    std::unique_ptr<TCPConnection> start(const std::string& ipAddr, uint16_t port)
     {
         return openListenSocket(ipAddr, port);
     }
@@ -122,12 +111,8 @@ public:
         return false;
     }
 
-    int writeToSocket(TCPConnInfo* conn, const std::string& data)
-    {
-        return send(conn->sockfd, data.c_str(), strlen(data.c_str()), 0);
-    }
-
-    TCPConnInfo openListenSocket(const std::string& ipAddr, uint16_t port)
+    // TODO: this should return a TCPConnection
+    std::unique_ptr<TCPConnection> openListenSocket(const std::string& ipAddr, uint16_t port)
     {
         if (ipAddr.empty()) {
             std::cerr << "No peer address provided" << std::endl;
@@ -165,27 +150,26 @@ public:
             return {};
         }
 
-        // the second number represents the maximum number
+        // the second number represents the maximum number of accepted connections, before they start being refused
         if (listen(sockfd, 1024) < 0) {
             close(sockfd);
             return {};
         }
 
-        TCPConnInfo data;
-        data.peerIP = ipAddr;
-        data.sockfd = sockfd;
-        data.peerPort = port;
-
-        connections_.push_back(data);
-
-        return data;
+        const TCPConnInfo connInfo{.sockfd = sockfd, .peerIP = ipAddr, .peerPort = port};
+        std::unique_ptr<TCPConnection> conn{new TCPConnection(connInfo)};
+        std::thread th(&TCPConnectionManager::checkForConnections, this, conn.get());
+        th.detach();
+        connections_.push_back(conn.get());
+        return conn;
     }
 
-    void checkForConnections(TCPConnInfo data)
+    void checkForConnections(TCPConnection* conn)
     {
+        const TCPConnInfo data = conn->connData_;
         fd_set set;
-        int    newSockFd;
-        int    sockfd = data.sockfd;
+        int newSockFd;
+        int sockfd = conn->connData_.sockfd;
 
         while (!finish.load(std::memory_order_relaxed)) {
             FD_ZERO(&set);        /* clear the set */
@@ -194,7 +178,7 @@ public:
 
             if ((activity < 0) && (errno != EINTR)) { std::cerr << "select error " << std::endl; }
 
-            std::cerr << "activity = " << activity << std::endl;
+            // std::cerr << "activity = " << activity << std::endl;
 
             if (activity == 0) continue;
             // If something happened on the socket, then its an incoming connection
@@ -206,10 +190,9 @@ public:
                 if (newSockFd < 0) {
                     std::cerr << "accept error" << std::endl;
                     continue;
-                    // return;
                 }
                 std::cerr << "New Connection, socket fd is " << newSockFd << ", destIP is " << data.peerIP
-                          << ", port : " << data.peerPort;
+                          << ", port : " << data.peerPort << std::endl;
 
                 const char* message = "Welcome message \r\n";
                 // send new connection greeting message
@@ -217,42 +200,13 @@ public:
 
                 std::cerr << "Welcome message sent successfully " << std::endl;
 
-                data.sockfd = newSockFd;
-
-                connections_.push_back(data);
-
-                newConnection(data);
-
-                // add new socket to array of sockets
-                // for (i = 0; i < max_clients; i++)
-                // {
-                //     //if position is empty
-                //     if( client_socket[i] == 0 )
-                //     {
-                //         client_socket[i] = new_socket;
-                //         printf("Adding to list of sockets as %d\n" , i);
-
-                //         break;
-                //     }
-                // }
-            }
-        }
-    }
-
-    void readDataFromSocket(TCPConnInfo data /* , char* buffer */)
-    {
-        std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[1024]);
-        while (!finish.load(std::memory_order_relaxed)) {
-            int valread = read(data.sockfd, (void*)buffer.get(), 1024);
-            if (valread != -1) {
-                std::cout << "Number of bytes read: " << valread << std::endl;
-                std::cout << "Message: " << std::endl;
-
-                for (int i = 0; i < valread; ++i) { std::cout << *(buffer.get() + i); }
-                std::cout << std::endl;
+                std::shared_ptr<TCPConnection> newConn{new TCPConnection(data)};
+                newConn->connData_.sockfd = newSockFd;
+                connections_.push_back(newConn.get());
+                newConnection(newConn);
             }
         }
     }
 };
 
-#endif
+#endif //!_TCP_HANDLER_HEADER_HPP_
