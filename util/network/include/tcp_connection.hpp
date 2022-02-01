@@ -28,7 +28,7 @@ public:
     bool write(const std::string& msg)
     {
         if (send(connData_.sockfd, msg.c_str(), strlen(msg.c_str()), 0) < 0) {
-            std::cerr << "send failed";
+            std::perror("send failed");
             return false;
         }
         return true;
@@ -40,7 +40,7 @@ public:
         th.detach();
     }
 
-    //TODO: read data from socket and to socket should be here.
+    //TODO: read data from socket and to socket should be here not in TCPConnectionManager
     void readDataFromSocket()
     {
         std::unique_ptr<char> buffer(new char[1024]);

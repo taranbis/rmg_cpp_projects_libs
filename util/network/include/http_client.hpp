@@ -23,16 +23,21 @@ public:
 
     void doRequest() {}
 
-    void doGetRequest()
+    void doGetRequest(const std::string& url)
     {
         //! spent alomost 1 hour figuring out why it didn't work. it was because of damn \r
-        conn_->write("\rGET / HTTP/1.1\n\rHost: localhost:8000\n\rAccept: */*");
+        conn_->write("GET / HTTP/1.1\r\nHost: " + url + "\r\nAccept: */*\r\n\r\n");
+        // conn_->write("GET / HTTP/1.1\r\nHost: www.google.com\r\nConnection: close\r\n\r\n");
     }
 
     // start
-    void start()
+    void start(const std::string& ipAddress, uint16_t port = 80)
     {
-        conn_ = std::move(connManager_.openConnection("127.0.0.1", 8000));
+        std::unique_ptr<TCPConnection> conn = connManager_.openConnection(ipAddress, port);
+        if(!conn){
+            std::cerr << "could not open connection\n";
+        }
+        conn_ = std::move(conn);
 
         auto printingFunction = [](std::vector<char> buffer) {
             std::cout << "[HTTPClient] ----- Number of bytes read: " << buffer.size() << std::endl;

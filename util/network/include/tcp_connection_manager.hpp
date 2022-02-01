@@ -12,6 +12,8 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <netdb.h> // for addrinfo
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
@@ -37,6 +39,41 @@ public:
         for (TCPConnection* conn : connections_) conn->stop();
     }
 
+    std::string dnsLookup(const std::string& host, uint16_t ipVersion = 0)
+    {
+        char ipAddress[INET6_ADDRSTRLEN]; // choose directly the maximum length which is for ipv6;
+
+        struct addrinfo hints{};
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family = (ipVersion == 6 ? AF_INET6 : AF_INET); // if it's 6 we choose IPv6, else we go with IPv4
+        hints.ai_socktype = SOCK_STREAM;
+
+        struct addrinfo *res;
+        int status = 0;
+        if ((status = getaddrinfo(host.c_str(), NULL, &hints, &res)) != 0) {
+            std::cerr << "getaddrinfo failed: " << gai_strerror(status) << std::endl;
+            return {};
+        }
+
+        // for (auto p = res; p != NULL; p = p->ai_next); this is only one. we looked for either IPv4 or 6. if we
+        // looked for both it would have been a linked list
+        void *addr;
+        if (res->ai_family == AF_INET) {
+            struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
+            addr = &(ipv4->sin_addr);
+            inet_ntop(res->ai_family, addr, ipAddress, sizeof ipAddress);
+        } else {
+            struct sockaddr_in6* ipv6 = (struct sockaddr_in6*)res->ai_addr;
+            addr = &(ipv6->sin6_addr);
+            inet_ntop(res->ai_family, addr, ipAddress, sizeof ipAddress);
+        }
+
+        freeaddrinfo(res); // free the linked list
+
+        return ipAddress;
+        // return openConnection(ipAddress, port);
+    }
+
     std::unique_ptr<TCPConnection> openConnection(const std::string& destAddress, uint16_t destPort)
     {
         return openConnection(destAddress, destPort, std::string(), 0);
@@ -56,15 +93,17 @@ public:
             return {};
         }
 
-        if (fcntl(sockfd, F_SETFL, O_NONBLOCK) == -1) {
-            std::cerr << "cannot set fd non blocking " << std::endl;
-            return {};
-        }
+        //! Don't do non-blocking. I ran into "Resource Temporarily Unavailable" when trying to send an HTTP Request
+        // to google
+        // if (fcntl(sockfd, F_SETFL, O_NONBLOCK) == -1) {
+        //     std::cerr << "cannot set fd non blocking " << std::endl;
+        //     return {};
+        // }
 
         int on = !sourceAddress.empty() ? 1 : 0;
         int res = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void*)&on, sizeof(on));
         if (res < 0) {
-            std::cerr << "couldn't set option" << std::endl;
+            std::cerr << "couldn't set SO_REUSEADDR option" << std::endl;
             return {};
         }
 

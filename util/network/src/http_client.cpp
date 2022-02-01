@@ -1,5 +1,7 @@
 #include "http_client.hpp"
 
+using namespace std;
+
 /**
  * Since I am starting a server one can connect as well using
  * telnet localhost 12301 and write messages
@@ -11,19 +13,15 @@ int main()
     TCPConnectionManager handler;
     HTTPClient httpClient(handler);
 
-    //-------------------------- Client Code ---------------------------------------------
-    httpClient.start();
-    httpClient.doGetRequest();
+    int ipv = 0;
+    const std::string url = "www.google.com";
+    const std::string ipAddress = handler.dnsLookup(url, ipv = 4);
+    std::cout << "ipv4 address is: " << ipAddress << std::endl;
 
-    // std::thread producerThread([&]() {
-    //     static int i = 0;
-    //     while (!finish.load(std::memory_order_relaxed)) {
-    //         std::string msg = "msg no. " + std::to_string(i++);
-    //         client->write(msg);
-    //         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    //     }
-    // });
-    //--------------------------------------------------------------------------------------
+    httpClient.start(ipAddress, 80);
+    httpClient.doGetRequest(url);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    httpClient.doGetRequest(url);
 
     std::thread inputThread([&] {
         if (std::cin.get() == 'n') {
