@@ -2,11 +2,6 @@
 
 using namespace std;
 
-/**
- * Since I am starting a server one can connect as well using
- * telnet localhost 12301 and write messages
- * or using nc localhost 12301
- */
 int main()
 {
     std::atomic<bool> finish{false};

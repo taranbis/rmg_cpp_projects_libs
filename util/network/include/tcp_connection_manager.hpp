@@ -233,11 +233,12 @@ public:
                 std::cerr << "New Connection, socket fd is " << newSockFd << ", destIP is " << data.peerIP
                           << ", port : " << data.peerPort << std::endl;
 
-                const char* message = "Welcome message \r\n";
-                // send new connection greeting message
-                if (send(newSockFd, message, strlen(message), 0) != strlen(message)) { perror("send"); }
+                //! should not send anything on the socket. e.g. failure for HTTP expects and HTTP message
+                // const char* message = "Welcome message \r\n";
+                // // send new connection greeting message
+                // if (send(newSockFd, message, strlen(message), 0) != strlen(message)) { perror("send"); }
 
-                std::cerr << "Welcome message sent successfully " << std::endl;
+                // std::cerr << "Welcome message sent successfully " << std::endl;
 
                 std::shared_ptr<TCPConnection> newConn{new TCPConnection(data)};
                 newConn->connData_.sockfd = newSockFd;
