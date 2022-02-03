@@ -1,14 +1,20 @@
+### Commit messages:
+- **feat**: (new feature for the user, not a new feature for build script)
+- **fix**: (bug fix for the user, not a fix to a build script)
+- **docs**: (changes to the documentation)
+- **style**: (formatting, missing semi colons, etc; no production code change)
+- **refactor**: (refactoring production code, eg. renaming a variable)
+- **test**: (adding missing tests, refactoring tests; no production code change)
+- **chore**: (updating grunt tasks etc; no production code change)
 
+### TODO
 - [x] util.h has to be fixed
 - [x] decode_jpg has to be fixed
-- [ ] IoT project has to be fixed
+- [x] IoT project has to be fixed
+- [x] move allocator to allocator projects
 - [ ] remove unneccessary files in CFD simulation
-- [ ] finish ray_tracing using cuda or look if it ok
+- [ ] finish ray_tracing using cuda or look if it is ok
 
-## To be implemented:
-- [ ] lexical_cast (improved boost version)
-- [ ] all relevant sorting algorithms
-- [ ] Redis type LRU cache
 
 ## Deep Learning
 
@@ -23,7 +29,7 @@
 ## Computational Science and Engineering (CSE) Algorithms
 Each important lecture of my Master's degree will have an implementation here
 
-- [ ] **Fluid Simulation**, discretizing Navier-Stokes equations and rendering
+- [x] **Fluid Simulation**, discretizing Navier-Stokes equations and rendering
 - [ ] **Planet Simulation**, 
 - [ ] make solvers for each iterative method; [Example](https://math.nist.gov/iml++/)
 - [ ] FD scheme on Poisson Equation
@@ -50,10 +56,10 @@ implemented mainly from Andrei Alexandrescu's talk at CppCon 2015: std::allocato
 
 ## Data Structures
 
-**Most important**: Union Find, Prefix Tree, Priority Queue 
+**Most important**: 
 
-- [ ] move allocator to allocator projects
 - [ ] *fast parallel HashMap* from CppCon 2017 presentation of Matt Kulukundis
+- [ ] Union Find, Prefix Tree, Priority Queue 
 
 found in [FastHashMap](FastHashMap)
 
@@ -62,7 +68,6 @@ found in [FastHashMap](FastHashMap)
 - [ ] C++14 multiple-producer-multiple-consumer lockless queues based on circular buffer with std::atomic. Similar implementation [here](https://github.com/max0x7ba/atomic_queue)
 - [ ] Monte Carlo Simulation on 2048 game
 - [ ] C++ LRU in-memory cache implementation. Idea from [here](https://github.com/warxander/lruc)
-- [ ] Snake Game (Simple + maybe add features) + GUI
 - [ ] Create a basic web server (dedicated old machine). Uses: a cloud storage unit by adding a few hard drives
 
 - [ ] Implementation of a profiling framework using instrumentation
@@ -79,4 +84,4 @@ An implementation similar to what I am looking for is [easy_profiler](https://gi
 
 #### Development
 - CMake > 3.8
-- C++11 / C99 Compiler (go with C++17)
+- C++20 (concepts are used)
