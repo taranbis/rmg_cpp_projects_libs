@@ -31,7 +31,7 @@ int main()
         connections.emplace_back(conn);
     });
 
-//-------------------------- Client Code ---------------------------------------------
+//----------------------------- Client Code ---------------------------------------------
     std::unique_ptr<TCPConnection> client = handler.openConnection("127.0.0.1", 12301);
     if (!client) {
         std::cerr << "socket wasn't open" << std::endl;
@@ -46,7 +46,7 @@ int main()
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     });
-//--------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
     std::thread inputThread([&] {
         if (std::cin.get() == 'n') {

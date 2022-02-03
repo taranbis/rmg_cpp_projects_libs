@@ -4,8 +4,7 @@
 
 #include "tcp_connection_manager.hpp"
 
-//Usage: 
-
+// Usage:
 // URL url = new URL("http://google.com");
 // HttpURLConnection http = (HttpURLConnection)url.openConnection();
 // var xhr = new XMLHttpRequest.Create(url);
@@ -34,8 +33,9 @@ public:
     void start(const std::string& ipAddress, uint16_t port = 80)
     {
         std::unique_ptr<TCPConnection> conn = connManager_.openConnection(ipAddress, port);
-        if(!conn){
+        if (!conn) {
             std::cerr << "could not open connection\n";
+            return;
         }
         conn_ = std::move(conn);
 
@@ -69,6 +69,7 @@ public:
         // return parent_.
         return {};
     }
+
 private:
     const HTTPClient parent_;
 };

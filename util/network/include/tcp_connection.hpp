@@ -40,7 +40,7 @@ public:
         th.detach();
     }
 
-    //TODO: read data from socket and to socket should be here not in TCPConnectionManager
+    // TODO: read data from socket and to socket should be here not in TCPConnectionManager
     void readDataFromSocket()
     {
         std::unique_ptr<char> buffer(new char[1024]);
@@ -65,15 +65,15 @@ public:
             }
         }
     }
-//TODO: bug if socket is closed from the other side reading continues with nothing
+    // TODO: bug if socket is closed from the other side reading continues with nothing
 public:
     // boost::signals2::signal<void(std::shared_ptr<char>)> newBytesIncomed;
-    boost::signals2::signal<void(std::vector<char> )> newBytesIncomed;
+    boost::signals2::signal<void(std::vector<char>)> newBytesIncomed;
 
 private:
     std::atomic<bool> finish{false};
     TCPConnInfo connData_;
-    bool printReceivedData {false};
+    bool printReceivedData{false};
 
     friend class TCPConnectionManager;
 };
