@@ -3,7 +3,7 @@
 #pragma once
 
 #include <chrono>
-#include <ctime>    
+#include <ctime>
 
 #include "tcp_connection_manager.hpp"
 #include "tcp_server.hpp"

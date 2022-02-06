@@ -6,7 +6,7 @@
 
 class TCPServer
 {
-public:
+private:
     TCPConnectionManager& tcpHandler_;
     std::unique_ptr<TCPConnection> tcpConn_;
 

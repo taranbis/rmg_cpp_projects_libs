@@ -17,5 +17,5 @@ set_target_properties(test_allocator PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQ
 
 # target_link_libraries(bench benchmark::benchmark)
 
-#find_package(benchmark REQUIRED) #it is a static library; don't use find_package as it will not be found
+find_package(benchmark REQUIRED) #it is a static library; don't use find_package as it will not be found
 target_link_libraries(test_allocator benchmark::benchmark)
