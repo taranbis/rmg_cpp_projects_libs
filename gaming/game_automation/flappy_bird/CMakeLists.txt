@@ -6,12 +6,14 @@ set_target_properties(flappy_bird PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIR
 find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED )
 find_package(X11 REQUIRED)
+# find_package(Xtst REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 target_link_libraries(flappy_bird Threads::Threads)
 target_link_libraries(flappy_bird ${OpenCV_LIBS})
-target_link_libraries(flappy_bird X11::X11)
+target_link_libraries(flappy_bird X11::X11 X11::Xtst)
 target_include_directories(flappy_bird PUBLIC ../../../util/include)
+# target_include_directories(flappy_bird X11::Xtst)
 
 # if (Boost_FOUND)
 # 	include_directories(${Boost_INCLUDE_DIRS})

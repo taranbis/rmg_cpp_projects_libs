@@ -6,6 +6,8 @@
 #include <opencv2/opencv.hpp>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/keysym.h>
+#include <X11/extensions/XTest.h>
 #include <opencv2/ml.hpp>
 
 #include "util.hpp"
@@ -65,15 +67,12 @@ int main()
     while (running) {
         ImageFromDisplay(Pixels, Width, Height, Bpp, 650, 170);
 
-        const Mat img = Mat(Height, Width, Bpp > 24 ? CV_8UC4 : CV_8UC3, &Pixels[0]);
+        Mat img = Mat(Height, Width, Bpp > 24 ? CV_8UC4 : CV_8UC3, &Pixels[0]);
 
         if (img.empty() || birdImg.empty()) {
             std::cerr << "Can't read one of the images" << std::endl;
             return EXIT_FAILURE;
         }
-
-        // alpha channel does not get read => we need to add it
-        // cvtColor(birdImg, birdImg, COLOR_BGR2BGRA);
 
         DEB(img.size());
         DEB(birdImg.size());
@@ -96,9 +95,50 @@ int main()
         Point maxLoc;
         minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat());
 
-        rectangle(img, minLoc, Point(minLoc.x + birdImg.cols, minLoc.y + birdImg.rows), Scalar{255, 0, 0}, 2, 8,
-                  0);
+        // alpha channel does not get read => we need to add it
+        Mat tubes = img;
+        cvtColor(tubes, tubes, COLOR_BGR2HSV);
+
+        // cv::inRange(tubes, Scalar{34, 110, 183}, Scalar{47, 196, 203}, tubes);
+        cv::inRange(tubes, Scalar{33, 56, 83}, Scalar{47, 196, 255}, tubes);
+
+        // Mat kernel = getStructuringElement(MORPH_RECT, Point{3,3});
+        // Mat opening;
+        // morphologyEx(tubes, opening, MORPH_OPEN, kernel);
+
+        // std::vector<std::vector<Point>> contours;
+        // std::vector<Vec4i> hierarchy;
+        // findContours(opening, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+        // Mat drawing = Mat::zeros(opening.size(), CV_8UC3);
+        // for (size_t i = 0; i < contours.size(); i++) {
+        //     drawContours(drawing, contours, (int)i, Scalar{0, 0, 255}, 2, LINE_8, hierarchy, 0);
+        // }
+
+        // std::cout << tubes << std::endl;
+        DEB(tubes.type());
+        DEB(tubes.size());
+
+        for (int i = 0; i < img.rows; i++) {
+            for (int j = 0; j < img.cols; j++) {
+                if (tubes.at<uchar>(i, j) == 255) {
+                    // originalImage.at<Vec3b>(i,j) = 255;
+                    img.at<Vec4b>(i, j)[0] = 255; // change it to white
+                    img.at<Vec4b>(i, j)[1] = 255;
+                    img.at<Vec4b>(i, j)[2] = 255;
+                    //   cout << i<<" " <<j<< endl;
+                }
+            }
+        }
+        rectangle(img, minLoc, Point{minLoc.x + birdImg.cols, minLoc.y + birdImg.rows}, Scalar{255, 0, 0}, 2, 8, 0);
         imshow("Finished Image", img);
+        imshow("Tubes", tubes);
+
+        // TODO: for pressing space do later
+        // Display* display = XOpenDisplay(NULL);
+        // unsigned int keycode = XKeysymToKeycode(display, XK_KP_Space);
+        // XTestFakeKeyEvent(display, keycode, True, 0);
+        // XTestFakeKeyEvent(display, keycode, False, 0);
+        // XCloseDisplay(display);
 
         if ((char)cv::waitKey(25) == 'q') {
             cv::destroyAllWindows();
