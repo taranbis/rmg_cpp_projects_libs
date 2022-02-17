@@ -129,16 +129,22 @@ int main()
                 }
             }
         }
+
+        cv::Point birdCentre{minLoc.x + birdImg.cols / 2, minLoc.y + birdImg.rows / 2};
         rectangle(img, minLoc, Point{minLoc.x + birdImg.cols, minLoc.y + birdImg.rows}, Scalar{255, 0, 0}, 2, 8, 0);
+        circle(img, birdCentre, 1, Scalar{0, 0, 255}, 5);
         imshow("Finished Image", img);
         imshow("Tubes", tubes);
 
+        //TODO: identify how far a jump goes
+
+
         // TODO: for pressing space do later
-        // Display* display = XOpenDisplay(NULL);
-        // unsigned int keycode = XKeysymToKeycode(display, XK_KP_Space);
-        // XTestFakeKeyEvent(display, keycode, True, 0);
-        // XTestFakeKeyEvent(display, keycode, False, 0);
-        // XCloseDisplay(display);
+        Display* display = XOpenDisplay(nullptr);
+        unsigned int keycode = XKeysymToKeycode(display, XK_KP_Space);
+        XTestFakeKeyEvent(display, keycode, True, 25);
+        XTestFakeKeyEvent(display, keycode, False, 25);
+        XCloseDisplay(display);
 
         if ((char)cv::waitKey(25) == 'q') {
             cv::destroyAllWindows();
