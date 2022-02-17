@@ -6,7 +6,6 @@
 #include <X11/Xutil.h>
 #include <opencv2/ml.hpp>
 
-
 #include "util.hpp"
 
 #include "utils2048.hpp"
@@ -45,9 +44,6 @@ void ImageFromDisplay(std::vector<uint8_t>& Pixels, const int& Width, const int&
     XCloseDisplay(display);
 }
 
-const int sizex = 103;
-const int sizey = 103;
-
 void PreProcessImage(Mat* inImage, Mat* outImage, int sizex, int sizey)
 {
     Mat grayImage, blurredImage, thresholdImage, contourImage, regionOfInterest;
@@ -79,151 +75,7 @@ void PreProcessImage(Mat* inImage, Mat* outImage, int sizex, int sizey)
     resize(regionOfInterest, *outImage, Size(sizex, sizey));
 }
 
-int main(){
-    const std::vector<int> possibleNumbers{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
-    const int classes = possibleNumbers.size();
-    const int train_samples = 1;
-
-    const int ImageSize = sizex * sizey;
-    const char pathToImages[] = ".";
-
-    Mat trainData = Mat(classes * train_samples, ImageSize, CV_32FC1);
-    Mat trainClasses = Mat(classes * train_samples, 1, CV_32FC1);
-
-    namedWindow("single", WINDOW_AUTOSIZE);
-    namedWindow("all", WINDOW_AUTOSIZE);
-
-    char file[255];
-    for (int i = 0; i < possibleNumbers.size() * train_samples; ++i) {
-        // sprintf(file, "%s/%d.png", pathToImages, i);
-        sprintf(file, "%d.png", possibleNumbers[i % possibleNumbers.size()]);
-        Mat src = imread(file, IMREAD_COLOR);
-        std::cout << "Reading file: " << file << std::endl;
-        if (!src.data) {
-            std::cout << "File " << file << " not found\n";
-            exit(1);
-        }
-
-        src.convertTo(src, CV_32FC4);
-        DEB(src.type());
-        DEB(src.size());
-
-        Mat img  = Mat::zeros(Size(src.cols, src.rows), CV_32FC1);
-        {
-            // Split the image into different channels
-            Mat rgbChannels[3];
-            split(src, rgbChannels);
-            DEB(rgbChannels[0].size());
-            DEB(rgbChannels[1].size());
-            DEB(rgbChannels[2].size());
-            // cv::add(rgbChannels[0], rgbChannels[1], img);
-            // cv::add(img, rgbChannels[2], img);
-            img = (rgbChannels[0] + rgbChannels[1] + rgbChannels[2]);
-        }
-        DEB(img.type());
-        DEB(img.size());
-
-
-        // Mat outfile;
-        // PreProcessImage(&img, &outfile, sizex, sizey);
-
-        for (int r = 0; r < img.rows; r++) {
-            for (int c = 0; c < img.cols; c++) { trainData.at<float>(i, r * img.rows + c) = img.at<float>(r, c); }
-        }
-
-        trainClasses.at<float>(i) = possibleNumbers[i % possibleNumbers.size()];
-    }
-
-    // DEB(trainData.at<float>(0,0));
-    // DEB(trainData.data[0]);
-    // DEB(trainData.at<float>(1,0));
-    // DEB(trainData.at<float>(0,2));
-    // DEB(trainData.at<float>(3,4));
-    // DEB(trainData.at<float>(4, 12));
-    // DEB(trainData.size());
-
-    Ptr kNearest = ml::KNearest::create();
-    kNearest->setIsClassifier(true);
-    kNearest->setDefaultK(12);
-    kNearest->setAlgorithmType(cv::ml::KNearest::Types::BRUTE_FORCE);
-
-    // DEB(trainData.rows);
-    // DEB(trainData.cols);
-
-    Ptr trainingData = ml::TrainData::create(trainData, ml::SampleTypes::ROW_SAMPLE, trainClasses);
-    kNearest->train(trainingData, 0);
-
-    int wrong = 0;
-    int right = 0;
-    for (int i = 0; i < possibleNumbers.size(); ++i) {
-        std::random_device rd_;
-        int iSecret = possibleNumbers[rd_() % 12];
-        std::cout <<"Trying to guess number: "<< iSecret << std::endl;
-        sprintf(file, "%d.png", iSecret);
-        Mat src = imread(file, IMREAD_COLOR);
-        if (!src.data) {
-            std::cout << "File " << file << " not found\n";
-            exit(1);
-        }
-
-        src.convertTo(src, CV_32FC4);
-        DEB(src.type());
-        DEB(src.size());
-
-        Mat img  = Mat::zeros(Size(src.cols, src.rows), CV_32FC1);
-        {
-            // Split the image into different channels
-            Mat rgbChannels[3];
-            split(src, rgbChannels);
-            DEB(rgbChannels[0].size());
-            DEB(rgbChannels[1].size());
-            DEB(rgbChannels[2].size());
-            // cv::add(rgbChannels[0], rgbChannels[1], img);
-            // cv::add(img, rgbChannels[2], img);
-            img = (rgbChannels[0] + rgbChannels[1] + rgbChannels[2]);
-        }
-        DEB(img.type());
-        DEB(img.size());
-
-        // single-precision floating-point matrix of `<number_of_samples> * k` size
-        // Mat stagedImage = Mat(1, ImageSize, CV_32FC1);
-        // PreProcessImage(&img, &stagedImage, sizex, sizey);
-
-        Mat sample2 = Mat(1, ImageSize, CV_32FC1);
-        for (int r = 0; r < img.rows; r++) {
-            for (int c = 0; c < img.cols; c++) { 
-                sample2.at<float>(1, r * img.rows + c) = img.at<float>(r, c); }
-        }
-        img.~Mat();
-
-        DEB(sample2.type());
-        DEB(sample2.size());
-
-
-        Mat matResults;
-        float detectedClass = kNearest->findNearest(sample2, 1, matResults);
-        sample2.~Mat();
-        DEB(matResults);
-        matResults.~Mat();
-        DEB(detectedClass);
-        if (iSecret != (int)((detectedClass))) {
-            std::cout << "Falsch. Ist " << iSecret << " aber geraten ist " << (int)((detectedClass)) << std::endl;
-            // exit(1);
-            wrong++;
-            continue;
-        }
-        right++;
-        std::cout << "Richtig " << (int)((detectedClass)) << "\n";
-        // imshow("single", img);
-        waitKey(0);
-    }
-
-    DEB(wrong);
-    DEB(right);
-}
-
-
-int main2()
+int main()
 {
     // FastRandomGenerator randomGen;
     // std::cout << randomGen.generate(16) << std::endl;
@@ -232,9 +84,12 @@ int main2()
     // Game game;
     // int Width = 700;
     // int Height = 750;
-    int Width = 600;
-    int Height = 550;
+    const int Width = 600;
+    const int Height = 550;
     int Bpp = 0;
+
+    const int sizex = 103;
+    const int sizey = 103;
     std::vector<std::uint8_t> Pixels;
     std::vector<std::uint8_t> squarePixels;
 
@@ -242,127 +97,99 @@ int main2()
 
     // while (running) {
     ImageFromDisplay(Pixels, Width, Height, Bpp, 650, 300);
-    ImageFromDisplay(squarePixels, 104, 104, Bpp, 1081, 345);
+    ImageFromDisplay(squarePixels, sizex, sizey, Bpp, 1081, 345);
 
-    if (Width && Height) {
-        Mat img = Mat(Height, Width, Bpp > 24 ? CV_8UC4 : CV_8UC3, &Pixels[0]);
-        Mat smallImgEmpty = Mat(104, 104, Bpp > 24 ? CV_8UC4 : CV_8UC3, &squarePixels[0]);
-        Mat smallImgEmpty2 = imread("2.png", IMREAD_UNCHANGED);
-        Mat smallImg = imread("empty3.png", IMREAD_UNCHANGED);
+    const std::vector<int> possibleNumbers{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
+    std::vector<cv::Mat> searchImages;
 
-        if (img.empty() || smallImg.empty()) {
-            std::cerr << "Can't read one of the images" << std::endl;
+    for(const int& number : possibleNumbers){
+        // std::aot
+        const std::string imgName = std::to_string(number) + ".png";
+        const cv::Mat pngImg = imread(imgName, IMREAD_UNCHANGED);
+        if (pngImg.empty()) {
+            std::cerr << "Could not read image: " << imgName << std::endl;
             return EXIT_FAILURE;
         }
+        searchImages.emplace_back(pngImg);
+    }
 
-        //alpha channel does not get read => we need to add it
-        cvtColor(smallImg, smallImg, COLOR_BGR2BGRA);
-        cvtColor(smallImgEmpty, smallImgEmpty, COLOR_BGR2BGRA);
-        cvtColor(smallImgEmpty2, smallImgEmpty2, COLOR_BGR2BGRA); //opcity is set to 255
+    const cv::Mat searchImage = searchImages[2];
+    // while(running){
+    // if (Width && Height) {
+    cv::Mat img = Mat(Height, Width, Bpp > 24 ? CV_8UC4 : CV_8UC3, &Pixels[0]);
+    cv::Mat smallImgEmpty = Mat(sizex, sizey, Bpp > 24 ? CV_8UC4 : CV_8UC3, &squarePixels[0]);
 
-        DEB(smallImgEmpty.size());
-        DEB(smallImgEmpty2.size());
+    // TODO: add all other images here
+    if (img.empty()) {
+        std::cerr << "Can't read one of the images" << std::endl;
+        return EXIT_FAILURE;
+    }
 
-        Mat a;
-        Mat b;
-        // a.create(smallImgEmpty, smallImgEmpty2, CV_32FC1);
-        absdiff(smallImgEmpty2, smallImgEmpty, a);
-        DEB(a);
-        DEB(sum(a).cols);
-        DEB(sum(a).rows);
+    // alpha channel does not get read => we need to add it
+    cvtColor(smallImgEmpty, smallImgEmpty, COLOR_BGR2BGRA);
+    cvtColor(searchImage, searchImage, COLOR_BGR2BGRA); // opacity is set to 255
 
-        if(sum(a)[0] < 100 && sum(a)[1] < 100 && sum(a)[2] < 100){
-            std::cout << "Images are equal" << std::endl;
-        }
-        cv::compare(smallImgEmpty2 , smallImgEmpty2  , b , cv::CMP_EQ );
-        DEB(sum(a));
-        imshow("Diff", a);
-        // a.count
-        DEB(sum(b));
-        // DEB(countNonZero(a));
-        // DEB(countNonZero(b));
-        // NEWLINE();
+    DEB(smallImgEmpty.size());
+    DEB(searchImage.size());
 
-        Scalar prevStdDev, currentStdDev;
-        // meanStdDev(smallImgEmpty, Scalar(), prevStdDev);
-        // meanStdDev(smallImgEmpty2, Scalar(), currentStdDev);
+    imshow("Initial image", img);
+    imshow("Small image", searchImage);
 
-        // // Decision Making.
-        // if (absdiff(currentStdDev - prevStdDev) < 1) { std::cout << "Images are equal" << std::endl; }
+    DEB(searchImage.type());
+    DEB(img.type());
 
-        // namedWindow("Source Image", WINDOW_AUTOSIZE);
-        imshow("Initial image", img);
-        imshow("Small image", smallImg);
+    cv::Mat result;
+    const int result_cols = img.cols - searchImage.cols + 1;
+    const int result_rows = img.rows - searchImage.rows + 1;
+    result.create(result_rows, result_cols, CV_32FC1);
 
-        DEB(smallImg.type());
-        DEB(img.type());
-        // NEWLINE();
+    matchTemplate(img, searchImage, result, TM_CCOEFF_NORMED /* TM_SQDIFF */);
 
-        // auto matchMethod = [&]() {
-            // Mat img_display;
-            // img.copyTo(img_display);
+    double minVal;
+    // double maxVal;
+    // Point minLoc;
+    // Point maxLoc;
+    minMaxLoc(result, &minVal /* , &maxVal, &minLoc, &maxLoc, Mat() */);
 
-            Mat result;
-            const int result_cols = img.cols - smallImg.cols + 1;
-            const int result_rows = img.rows - smallImg.rows + 1;
-            result.create(result_rows, result_cols, CV_32FC1);
+    //! be careful with conversions. keep it in float to do floating point stuff
+    const double threshold = 0.75;
+    const cv::Mat thresholdImage = result >= threshold;
 
-            matchTemplate(img, smallImg, result, TM_CCOEFF_NORMED/* TM_SQDIFF */);
+    imshow("thresholdImage", thresholdImage);
+    imshow("Result", result);
 
-            double minVal;
-            double maxVal;
-            Point minLoc;
-            Point maxLoc;
-            minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, Mat());
+    auto isIntersecting = [](cv::Point bottomLeft1, cv::Point topRight1, cv::Point bottomLeft2,
+                             cv::Point topRight2) {
+        if (topRight1.x < bottomLeft2.x || bottomLeft1.x > topRight2.x) return false; // means they are intersecting
+        if (topRight1.y < bottomLeft2.y || bottomLeft1.y > topRight2.y) return false; // means they are intersecting
+        return true;
+    };
 
-            result.convertTo(result, CV_8UC4);
-
-            // Mat thresholdImage;
-            // thresholdImage.create(result_rows, result_cols, CV_8UC4);
-            // threshold(result, thresholdImage, 0.9, 255, THRESH_BINARY);
-            // double threshold = (minVal + 1e-6) * 50;
-            // cv::Mat thresholdImage = result < 100;
-            double threshold = 0.08;
-            cv::Mat thresholdImage = result >= threshold;
-
-
-            imshow("thresholdImage", thresholdImage);
-            imshow("Result", result);
-
-            for (int r = 0; r < thresholdImage.rows; r++) {
-                for (int c = 0; c < thresholdImage.cols; c++) {
-                    if (thresholdImage.at<uchar>(r, c) > 0) {
-                        rectangle(img, Point(c, r), Point(c + smallImg.cols, r + smallImg.rows), Scalar::all(0), 2,
-                                  8, 0);
+    std::vector<cv::Point> matchingPoints{};
+    for (int r = 0; r < thresholdImage.rows; r++) {
+        for (int c = 0; c < thresholdImage.cols; c++) {
+            if (thresholdImage.at<uchar>(r, c) > 0) {
+                bool intersected = false;
+                for (const cv::Point& matchingPoint : matchingPoints) {
+                    if (isIntersecting(matchingPoint, {matchingPoint.x + sizex, matchingPoint.y + sizey}, {c, r}, {c + sizex, r + sizey})) {
+                        intersected = true;
+                        break;
                     }
                 }
+                if (!intersected) {
+                    matchingPoints.emplace_back(cv::Point{c, r});
+                    rectangle(img, cv::Point(c, r), cv::Point(c + sizex, r + sizey), cv::Scalar::all(0), 2, 8, 0);
+                    DEB(cv::Point(c, r));
+                }
             }
-
-            // for (int r = 0; r < thresholdImage.rows; ++r) {
-            //     for (int c = 0; c < thresholdImage.cols; ++c) {
-            //         if (!thresholdImage.at<unsigned char>(r, c)) // = thresholdedImage(r,c) == 0
-            //             cv::circle(img, cv::Point(c, r), smallImg.cols / 2, CV_RGB(0, 255, 0), 1);
-            //     }
-            // }
-
-            // rectangle(img, minLoc, Point(minLoc.x + smallImg.cols, minLoc.y + smallImg.rows),
-            //           Scalar::all(0), 2, 8, 0);
-            imshow("Finished Image", img);
-            imshow("Result window", result);
-            // return;
-        // };
-
-        //TODO: not needed here but this is cool;
-        // const char* trackbar_label =
-        //             "Method: \n 0: SQDIFF \n 1: SQDIFF NORMED \n 2: TM CCORR \n 3: TM CCORR NORMED \n 4: TM COEFF "
-        //             "\n 5: TM COEFF NORMED";
-        // createTrackbar(trackbar_label, "Source Image", &match_method, max_Trackbar);
-
-        // img.isSubmatrix();
-
-        // waitKey(0);
-        // matchMethod();
+        }
     }
+
+    DEB(matchingPoints.size());
+    imshow("Finished Image", img);
+    imshow("Result window", result);
+    // return;
+    // };
 
     if ((char)cv::waitKey(0) == 'q') {
         cv::destroyAllWindows();
