@@ -1,4 +1,3 @@
-#include <random>
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -7,11 +6,10 @@
 #include <opencv2/opencv.hpp>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <opencv2/ml.hpp>
 
 #include "util.hpp"
 
-#include "utils2048.hpp"
+#include "game_2048.hpp"
 #include "monte_carlo_search.hpp"
 
 using namespace cv;
@@ -41,8 +39,9 @@ int main()
     // FastRandomGenerator randomGen;
     // std::cout << randomGen.generate(16) << std::endl;
 
-    // Board<4,4> board;
-    // Game game;
+    Board<4,4> board;
+    Board<4,4> prevBoard;
+    Game game(board);
 
     const std::vector<int> possibleNumbers{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
 
@@ -88,18 +87,11 @@ int main()
     std::vector<std::uint8_t> Pixels;
     std::vector<std::uint8_t> squarePixels;
 
-    std::vector<std::vector<int>> prevResults;
     bool running = true;
     while (running) {
         ImageFromDisplay(Pixels, Width, Height, Bpp, 650, 300);
         ImageFromDisplay(squarePixels, sizex, sizey, Bpp, 1081, 345);
 
-        std::vector<std::vector<int>> results;
-        results.reserve(tileCentres.size());
-        for (std::size_t c = 0; c < tileCentres.size(); ++c) {
-            results.emplace_back(std::vector<int>{});
-            for (std::size_t r = 0; r < tileCentres[c].size(); ++r) { results[c].emplace_back(0); }
-        }
         for (const std::pair<cv::Mat, int>& searchedImagePair : searchedImages) {
             const cv::Mat searchImage = searchedImagePair.first;
             const int searchedNumber = searchedImagePair.second;
@@ -153,7 +145,8 @@ int main()
                             rectangle(img, cv::Point(c, r), cv::Point(c + sizex, r + sizey), cv::Scalar::all(0), 2, 8, 0);
                             circle(img, cv::Point(c + sizex / 2, r + sizey / 2), 1, Scalar{0, 0, 255}, 5);
                             std::pair<int, int> pointPosition = calculatePointIndex(cv::Point(c + sizex / 2, r + sizey / 2));
-                            results[pointPosition.first][pointPosition.second] = searchedNumber;
+                            // results[pointPosition.first][pointPosition.second] = searchedNumber;
+                            board.at(pointPosition.first, pointPosition.second) = searchedNumber;
                         }
                     }
                 }
@@ -166,9 +159,17 @@ int main()
             break;
         }
 
-        if (prevResults != results) {
-            rmg::PrintMatrix(results);
-            prevResults = results;
+        if (prevBoard != board) {
+            
+            // std::cout << "can move left: " << std::boolalpha << board.canMoveLeft() << std::endl;
+            // std::cout << "Previous board:\n ";
+            // prevBoard.printBoard();
+
+            std::cout << "Board:\n ";
+            board.printBoard();
+
+            prevBoard = board;
+            board.setZero();
         }
     }
     return 0;
