@@ -1,2 +1,3 @@
 add_subdirectory(asteroids)
 add_subdirectory(game_automation)
+add_subdirectory(fast2048)

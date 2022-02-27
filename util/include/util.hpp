@@ -162,9 +162,7 @@ typedef unsigned int uintptr_t;
 #define DEB_LONG(x) std::cout << std::setw(50) << #x << " = " << std::setw(12) << x << " "
 #define DEB_SHORT(x) std::cout << std::setw(25) << #x << " = " << std::setw(5) << x << " "
 #define DEB_BOOL(x) std::cout << #x << " = " << std::boolalpha << x << " ";
-#define DEB_BINARY(x)                \
-    std::bitset<sizeof(x) * 8> y(x); \
-    std::cout << #x << " =  " << y << " "
+#define DEB_BINARY(x) std::cout << #x << " =  " << std::bitset<sizeof(x) * 8>(x) << " "
 #define NEWLINE() std::cout << std::endl
 #define DEBLINE() std::cout << "Line: " << __LINE__ << std::endl;
 #define DEBFILE() std::cout << "File: " << __FILE__ << std::endl;

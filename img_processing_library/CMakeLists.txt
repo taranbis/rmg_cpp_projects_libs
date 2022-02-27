@@ -9,3 +9,6 @@ target_include_directories(decode_jpg PRIVATE "../util/include")
 # if(Boost_FOUND)   
 #     target_link_libraries(decode_jpg Boost)
 # endif()
+
+
+add_subdirectory(fourier_transform)

@@ -1,0 +1,1 @@
+<img src="https://github.com/taranbis/rmg_cpp_projects_libs/blob/feature/math/extra/2048_first_step.png" alt="2048_first_step.png" style="zoom:150%;" />

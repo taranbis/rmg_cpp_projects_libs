@@ -30,7 +30,7 @@ private:
     void* do_allocate(std::size_t numBytes, std::size_t alignment) override
     {
         if (inlinePrint_) {
-            std::cout << std::setw(prefix_.size() + 1) << prefix_ << " -- " << std::setw(45)
+            std::cout << std::setw(prefix_.size() + 1) << prefix_ << " -- [Allocating...]" << std::setw(45)
                       << "Number of bytes allocated in this call: " << std::setw(3) << numBytes
                       << " \tNumber of bytes allocated until now: " << numOfBytesAllocated_ << std::endl;
         }
@@ -41,7 +41,13 @@ private:
     void do_deallocate(void* p, std::size_t numBytes, std::size_t alignment) override
     {
         if (inlinePrint_) {
-            std::cout << std::setw(prefix_.size() + 1) << prefix_ << " -- " << std::setw(45)
+            // std::cout << std::setw(prefix_.size() + 1) << prefix_ << " -- Deallocating ..." << std::endl;
+
+            // std::cout << std::setw(prefix_.size() + 1) << prefix_ << " -- ";
+            // for (std::size_t i = 0; i < numBytes; ++i) std::cout << *(static_cast<char*>(p) + i);
+            // std::cout << "'\n";
+
+            std::cout << std::setw(prefix_.size() + 1) << prefix_ << " -- [Deallocating...]" << std::setw(45)
                       << "Number of bytes deallocated in this call: " << std::setw(3) << numBytes
                       << " \tNumber of bytes allocated until now: " << numOfBytesAllocated_ << std::endl;
         }
