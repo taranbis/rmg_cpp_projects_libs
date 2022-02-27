@@ -151,7 +151,7 @@ int main()
                     }
                 }
             }
-            imshow("Finished Image", img);
+            // imshow("Finished Image", img);
         }
         if ((char)cv::waitKey(1) == 'q') {
             cv::destroyAllWindows();
@@ -159,18 +159,40 @@ int main()
             break;
         }
 
-        if (prevBoard != board) {
-            
-            // std::cout << "can move left: " << std::boolalpha << board.canMoveLeft() << std::endl;
-            // std::cout << "Previous board:\n ";
-            // prevBoard.printBoard();
+        game.setBoard(board);
+        // std::cout << "can move left: " << std::boolalpha << board.canMoveLeft() << std::endl;
+        // std::cout << "Previous board:\n ";
+        // prevBoard.printBoard();
 
-            std::cout << "Board:\n ";
-            board.printBoard();
-
-            prevBoard = board;
-            board.setZero();
+        Game::Direction dir = game.findBestMove();
+        if (dir == Game::Direction::Left) {
+            std::cout << "move left! " << std::endl;
+            game.move(Game::Direction::Left);
+            game.moveLeft();
+        } else if (dir == Game::Direction::Right) {
+            std::cout << "move right! " << std::endl;
+            game.move(Game::Direction::Right);
+            game.moveRight();
         }
+
+        // game.getBoard().print();
+
+        // DEB(prevBoard);
+        DEB(board);
+        // DEB(game.getBoard());
+
+        if (prevBoard == board /* || board != game.getBoard() */) {
+            cv::destroyAllWindows();
+            running = false;
+            std::cout << "Score: " << game.getScore() << std::endl;
+            break;
+        }
+
+        prevBoard = board;
+        board.setZero();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // }
     }
     return 0;
 }

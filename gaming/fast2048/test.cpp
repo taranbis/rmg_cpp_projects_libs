@@ -3,6 +3,17 @@
 #include <iostream>
 #include <limits>
 #include <set>
+#include <thread>
+#include <chrono>
+
+#include <stdio.h>
+#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
+#include <X11/extensions/XTest.h>
+#include <X11/keysymdef.h>
+
+#include "game_2048.hpp"
+#include "board_2048.hpp"
 
 inline const char * const BoolToString(bool b)
 {
@@ -71,9 +82,51 @@ public:
     }
 };
 
-int main()
+int testDirection()
 {
-    Utils2048 test;
+    // Utils2048 test;
+
+    Board<4, 4> board;
+    Game game(board);
+
+    game.move(Game::Direction::Left);
+    game.move(Game::Direction::Right);
+    game.move(Game::Direction::Left);
+    game.move(Game::Direction::Right);
+    game.move(Game::Direction::Left);
 
     return 0;
+}
+
+int testMirroring()
+{
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{4, 2, 0, 2}, std::vector<int>{2, 0, 0, 2},
+                                                    std::vector<int>{4, 0, 2, 0}, std::vector<int>{2, 4, 2, 2}});
+
+    Game game(board);
+    game.getBoard().print();
+    game.moveRight();
+
+    game.getBoard().print();
+
+    return 0;
+}
+
+int testScore()
+{
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{4, 2, 0, 2}, std::vector<int>{2, 0, 0, 2},
+                                                    std::vector<int>{4, 0, 2, 0}, std::vector<int>{2, 4, 2, 2}});
+
+    Game game(board);
+    game.getBoard().print();
+    game.moveRight();
+
+    game.getBoard().print();
+
+    DEB(game.getScore()); // this should pe 12 - write test for it as well
+    return 0;
+}
+
+int main(){
+    
 }

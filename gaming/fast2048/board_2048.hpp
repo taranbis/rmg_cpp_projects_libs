@@ -71,6 +71,11 @@ public:
         return board_[pos];
     }
 
+    const uint16_t& operator[](std::size_t pos) const
+    { // No bounds checking performed;
+        return board_[pos];
+    }
+
     uint16_t& at(std::size_t x, std::size_t y)
     { // No bounds checking performed;
         return board_[x * Columns + y];
@@ -83,8 +88,16 @@ public:
         }
     }
 
-    // TODO: should be a function outside of the class
-    void printBoard() const
+    std::size_t countEmptyTiles() const
+    {
+        std::size_t rv{};
+        for (auto& val : board_) {
+            if (val == 0) rv++;
+        }
+        return rv;
+    }
+    
+    void print() const
     {
         std::cout << "-------------------Board-------------------------------" << std::endl;
         for (std::size_t row = 0; row < Rows; row++) {
@@ -94,107 +107,19 @@ public:
         std::cout << "-------------------------------------------------------" << std::endl;
     }
 
-    std::size_t countEmptyTiles() const
-    {
-        std::size_t rv{};
-        for (auto& val : board_) {
-            if (val == 0) rv++;
-        }
-        return rv;
-    }
-
-    bool canMoveLeft()
-    {
-        // bool rv = true;
-        // for (std::size_t row = 0; row < Rows; row++) {
-        //     bool rowCanMove = true;
-        //     if (board_[row * Columns] == 0) {
-        //         rowCanMove &= true;
-        //         // return true;
-        //         continue;
-        //     }
-        //     for (std::size_t col = 1; col < Columns - 1; col++) {
-        //         if ((board_[row * Columns + col - 1] ^ board_[row * Columns + col]) == 0) {
-        //             rowCanMove &= true;
-        //             // return true;
-        //             break;
-        //         }
-
-        //         if(board_[row * Columns + col] == 0){}
-
-        //         if (col == Columns - 2) rv &= false;
-        //     }
-        // }
-        // // return rv;
-        // return false;
-
-        Board<Rows, Columns> board(*this);
-        moveLeft(board);
-        if (board_ == board.board_) return false;
-        return true;
-    }
-
-    // TODO: move this outside. pass board as an argument -> should be Game
-    // TODO: should return the score
-    void moveLeft(Board<Rows, Columns>& board)
-    {
-        // if (!canMoveLeft()) return;
-
-        for (std::size_t row = 0; row < Rows; row++) {
-            std::vector<uint16_t> sparseRow = makeSparseRow(row);
-
-            std::puts("sparse row");
-            for (auto& val : sparseRow) std::cout << val << " ";
-            std::cout << std::endl;
-
-            for (auto it = sparseRow.begin() + 1; it != sparseRow.end() && sparseRow.size() >= 2; ++it) {
-                if (*it == 0) continue;
-                if (*it == *(it - 1)) {
-                    *(it - 1) = *it + *(it - 1);
-                    *it = 0;
-                }
-            }
-
-            // TODO: this is not always
-            sparseRow = makeSparseRow(sparseRow);
-
-            auto it = sparseRow.cbegin();
-            for (std::size_t col = 0; col < Columns; col++) {
-                if ((it + col) < sparseRow.cend()) {
-                    //! != was exactly that. i needed to have < iter to work
-                    board[row * Columns + col] = *(it + col);
-                } else
-                    board[row * Columns + col] = 0;
-            }
-        }
-    }
-
-    std::vector<uint16_t> makeSparseRow(std::size_t row) const
-    {
-        std::vector<uint16_t> rv{};
-        for (std::size_t col = 0; col < Columns; col++) {
-            if (board_[row * Columns + col] != 0) rv.emplace_back(board_[row * Columns + col]);
-        }
-        return rv;
-    }
-
-    std::vector<uint16_t> makeSparseRow(const std::vector<uint16_t>& row) const
-    {
-        std::vector<uint16_t> rv{};
-        for (auto it = row.cbegin(); it != row.cend(); ++it) {
-            if (*it != 0) rv.emplace_back(*it);
-        }
-        return rv;
-    }
-
-    bool canMoveRight() const
-    {
-        // TODO_2048 NOT TRUE
-        return canMoveLeft();
-    }
-
 private:
     Matrix board_{};
 };
+
+template <std::size_t Rows, std::size_t Columns>
+std::ostream& operator<<(std::ostream& os, const Board<Rows, Columns> board)
+{
+    os << std::endl;
+    for (std::size_t row = 0; row < Rows; row++) {
+        for (std::size_t col = 0; col < Columns; col++) os << board[row * Columns + col] << " ";
+        os << std::endl;
+    }
+    return os;
+}
 
 #endif //!_BOARD_2048_HEADER_HPP_
