@@ -58,10 +58,10 @@ public:
     {
         if (values.size() > Rows) return;
 
-        for (size_t i = 0; i < values.size(); ++i) {
-            for (size_t j = 0; j < values[i].size(); ++j) {
-                if (values[i].size() > Columns) return;
-                board_[i * Columns + j] = values[i][j];
+        for (size_t row = 0; row < values.size(); ++row) {
+            for (size_t col = 0; col < values[row].size(); ++col) {
+                if (values[row].size() > Columns) return;
+                board_[row * Columns + col] = values[row][col];
             }
         }
     }

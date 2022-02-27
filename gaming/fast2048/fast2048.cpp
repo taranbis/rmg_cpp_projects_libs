@@ -145,7 +145,6 @@ int main()
                             rectangle(img, cv::Point(c, r), cv::Point(c + sizex, r + sizey), cv::Scalar::all(0), 2, 8, 0);
                             circle(img, cv::Point(c + sizex / 2, r + sizey / 2), 1, Scalar{0, 0, 255}, 5);
                             std::pair<int, int> pointPosition = calculatePointIndex(cv::Point(c + sizex / 2, r + sizey / 2));
-                            // results[pointPosition.first][pointPosition.second] = searchedNumber;
                             board.at(pointPosition.first, pointPosition.second) = searchedNumber;
                         }
                     }
@@ -160,27 +159,27 @@ int main()
         }
 
         game.setBoard(board);
-        // std::cout << "can move left: " << std::boolalpha << board.canMoveLeft() << std::endl;
-        // std::cout << "Previous board:\n ";
-        // prevBoard.printBoard();
 
         Game::Direction dir = game.findBestMove();
         if (dir == Game::Direction::Left) {
             std::cout << "move left! " << std::endl;
-            game.move(Game::Direction::Left);
+            game.move(dir);
             game.moveLeft();
         } else if (dir == Game::Direction::Right) {
             std::cout << "move right! " << std::endl;
-            game.move(Game::Direction::Right);
+            game.move(dir);
             game.moveRight();
+        } else if (dir == Game::Direction::Up) {
+            std::cout << "move up! " << std::endl;
+            game.move(dir);
+            game.moveUp();
+        } else if (dir == Game::Direction::Down) {
+            std::cout << "move down! " << std::endl;
+            game.move(dir);
+            game.moveDown();
         }
 
-        // game.getBoard().print();
-
-        // DEB(prevBoard);
         DEB(board);
-        // DEB(game.getBoard());
-
         if (prevBoard == board /* || board != game.getBoard() */) {
             cv::destroyAllWindows();
             running = false;
@@ -192,7 +191,6 @@ int main()
         board.setZero();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        // }
     }
     return 0;
 }

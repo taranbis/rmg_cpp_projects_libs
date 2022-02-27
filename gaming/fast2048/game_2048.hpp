@@ -36,30 +36,22 @@ public:
 
     // }
 
-    // double score(){
-
-    // }
-
-    // bool canMoveUp() {}s
+    // bool canMoveUp() {}
 
     void move(Direction dir) const
     {
         KeySym keyCode; 
         switch (dir) {
         case Direction::Up: 
-            // moveUp();
             keyCode = XK_Up;
             break;
         case Direction::Down:
-            // moveDown();
             keyCode = XK_Down;
             break;
         case Direction::Left:
-            // moveLeft(board_);
             keyCode = XK_Left;
             break;
         case Direction::Right:
-            // moveRight();
             keyCode = XK_Right;
             break;
         // default:
@@ -86,16 +78,25 @@ public:
         }
     }
 
-    std::vector<uint16_t> makeSparseRow(std::size_t row) const
+    std::vector<uint16_t> makeSparseRow(const Board<Rows, Columns>& board, std::size_t row) const
     {
         std::vector<uint16_t> rv{};
         for (std::size_t col = 0; col < Columns; col++) {
-            if (board_[row * Columns + col] != 0) rv.emplace_back(board_[row * Columns + col]);
+            if (board[row * Columns + col] != 0) rv.emplace_back(board[row * Columns + col]);
         }
         return rv;
     }
 
-    std::vector<uint16_t> makeSparseRow(const std::vector<uint16_t>& row) const
+    std::vector<uint16_t> makeSparseColumn(const Board<Rows, Columns>& board, std::size_t col) const
+    {
+        std::vector<uint16_t> rv{};
+        for (std::size_t row = 0; row < Rows; row++) {
+            if (board[row * Columns + col] != 0) rv.emplace_back(board[row * Columns + col]);
+        }
+        return rv;
+    }
+
+    std::vector<uint16_t> makeSparseVector(const std::vector<uint16_t>& row) const
     {
         std::vector<uint16_t> rv{};
         for (auto it = row.cbegin(); it != row.cend(); ++it) {
@@ -104,12 +105,23 @@ public:
         return rv;
     }
 
-    Board<Rows, Columns> mirrorBoardOnYAxes(Board<Rows, Columns> board) const
+    Board<Rows, Columns> mirrorBoardOnYAxes(const Board<Rows, Columns>& board) const
     {
         Board<Rows, Columns> rv{}; 
         for (std::size_t row = 0; row < Rows; row++) {
             for (std::size_t col = 0; col < Columns; col++) { 
                 rv.at(row, Columns - 1 - col) = board[row * Columns + col];
+            }
+        }
+        return rv;
+    }
+
+    Board<Rows, Columns> mirrorBoardOnXAxes(const Board<Rows, Columns>& board) const
+    {
+        Board<Rows, Columns> rv{};
+        for (std::size_t col = 0; col < Columns; col++) {
+            for (std::size_t row = 0; row < Rows; row++) {
+                rv.at(Rows - 1 - row, col) = board[row * Columns + col];
             }
         }
         return rv;
@@ -123,24 +135,48 @@ public:
         return true;
     }
 
-    bool canMoveRight()
-    {
-        // TODO: should be ok
-        Board<Rows, Columns> mirroredBoard = mirrorBoardOnYAxes(board_);
-        Board<Rows, Columns> board(mirroredBoard);
-        doMoveLeft(board);
-        if (mirroredBoard == board) return false;
-        return true;
-    }
-
     void moveLeft()
     {
         score_ += doMoveLeft(board_);
     }
 
+    bool canMoveRight()
+    {
+        Board<Rows, Columns> board(board_);
+        doMoveRight(board);
+        if (board_ == board) return false;
+        return true;
+    }
+
     void moveRight()
     {
         score_ += doMoveRight(board_);
+    }
+
+    bool canMoveUp()
+    {
+        Board<Rows, Columns> board(board_);
+        doMoveUp(board);
+        if (board_ == board) return false;
+        return true;
+    }
+
+    void moveUp()
+    {
+        score_ += doMoveUp(board_);
+    }
+
+    bool canMoveDown()
+    {
+        Board<Rows, Columns> board(board_);
+        doMoveDown(board);
+        if (board_ == board) return false;
+        return true;
+    }
+
+    void moveDown()
+    {
+        score_ += doMoveDown(board_);
     }
 
     Board<Rows, Columns> getBoard() const
@@ -178,37 +214,51 @@ public:
         Direction rv{Direction::Left};
         std::size_t maxScore = 0;
 
-        // auto callFunctionAndComputeScore = [&maxScore, &rv, this](std::function<std::size_t(Board<Rows, Columns>)> fn) {
+        // auto callFunctionAndComputeScore = [&maxScore, &rv, this](std::function<std::size_t(Board<Rows,
+        // Columns>)> fn) {
         //     const std::size_t score = fn(Board<Rows, Columns>(board_));
         //     if (score > maxScore) maxScore = score;
         // };
 
-        //UP
-        //Right
-        //Left
-        //Down
-
-        if (canMoveRight()) {
+        // Up
+        if (canMoveUp()) {
             // auto callMoveRight = [this](Board<Rows, Columns> board) { return doMoveRight(board); };
             // callFunctionAndComputeScore(callMoveRight);
             Board<Rows, Columns> board(board_);
+            const std::size_t score = doMoveUp(board);
+            if (score >= maxScore) {
+                maxScore = score;
+                rv = Direction::Up;
+            }
+        }
+
+        // Right
+        if (canMoveRight()) {
+            Board<Rows, Columns> board(board_);
             const std::size_t score = doMoveRight(board);
-            // DEB(score);
-            // DEB(board_);
             if (score >= maxScore) {
                 maxScore = score;
                 rv = Direction::Right;
             }
         }
 
+        // Left
         if (canMoveLeft()) {
             Board<Rows, Columns> board(board_);
             const std::size_t score = doMoveLeft(board);
-            // DEB(score);
-            // DEB(board_);
             if (score >= maxScore) {
                 maxScore = score;
                 rv = Direction::Left;
+            }
+        }
+
+        // Down
+        if (canMoveDown()) {
+            Board<Rows, Columns> board(board_);
+            const std::size_t score = doMoveDown(board);
+            if (score >= maxScore) {
+                maxScore = score;
+                rv = Direction::Down;
             }
         }
 
@@ -238,11 +288,7 @@ private:
     {
         std::size_t score = 0;
         for (std::size_t row = 0; row < Rows; row++) {
-            std::vector<uint16_t> sparseRow = makeSparseRow(row);
-
-            // std::puts("sparse row");
-            // for (auto& val : sparseRow) std::cout << val << " ";
-            // std::cout << std::endl;
+            std::vector<uint16_t> sparseRow = makeSparseRow(board, row);
 
             for (auto it = sparseRow.begin() + 1; it != sparseRow.end() && sparseRow.size() >= 2; ++it) {
                 if (*it == 0) continue;
@@ -253,8 +299,7 @@ private:
                 }
             }
 
-            // TODO: this is not always
-            sparseRow = makeSparseRow(sparseRow);
+            sparseRow = makeSparseVector(sparseRow);
 
             auto it = sparseRow.cbegin();
             for (std::size_t col = 0; col < Columns; col++) {
@@ -268,7 +313,39 @@ private:
         return score;
     }
 
-    //TODO: make it take as well an additional argument
+    std::size_t doMoveUp(Board<Rows, Columns>& board)
+    {
+        std::size_t score = 0;
+        for (std::size_t col = 0; col < Columns; col++) {
+            std::vector<uint16_t> sparseColumn = makeSparseColumn(board, col);
+
+            // std::puts("sparse column");
+            // for(auto x : sparseColumn) std::cout<<x << " ";
+            // std::cout << std::endl;
+
+            for (auto it = sparseColumn.begin() + 1; it != sparseColumn.end() && sparseColumn.size() >= 2; ++it) {
+                if (*it == 0) continue;
+                if (*it == *(it - 1)) {
+                    *(it - 1) += *it;
+                    score += *(it - 1);
+                    *it = 0;
+                }
+            }
+
+            sparseColumn = makeSparseVector(sparseColumn);
+
+            auto it = sparseColumn.cbegin();
+            for (std::size_t row = 0; row < Rows; row++) {
+                if ((it + row) < sparseColumn.cend()) {
+                    //! != was exactly that. i needed to have < iter to work.otherwise the iterator was going forward
+                    board[row * Columns + col] = *(it + row);
+                } else
+                    board[row * Columns + col] = 0;
+            }
+        }
+        return score;
+    }
+
     std::size_t doMoveRight(Board<Rows, Columns>& board)
     {
         board = mirrorBoardOnYAxes(board);
@@ -276,6 +353,16 @@ private:
         board = mirrorBoardOnYAxes(board);
         return score;
     }
+
+
+    std::size_t doMoveDown(Board<Rows, Columns>& board)
+    {
+        board = mirrorBoardOnXAxes(board);
+        const std::size_t score = doMoveUp(board);
+        board = mirrorBoardOnXAxes(board);
+        return score;
+    }
+
 
 private:
     Board<Rows, Columns> board_;

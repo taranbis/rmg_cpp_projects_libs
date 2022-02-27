@@ -5,6 +5,7 @@
 #include <set>
 #include <thread>
 #include <chrono>
+#include <type_traits>
 
 #include <stdio.h>
 #include <X11/Xlib.h>
@@ -100,8 +101,10 @@ int testDirection()
 
 int testMirroring()
 {
-    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{4, 2, 0, 2}, std::vector<int>{2, 0, 0, 2},
-                                                    std::vector<int>{4, 0, 2, 0}, std::vector<int>{2, 4, 2, 2}});
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{4, 2, 0, 2},
+                                                    std::vector<int>{2, 0, 0, 2},
+                                                    std::vector<int>{4, 0, 2, 0},
+                                                    std::vector<int>{2, 4, 2, 2}});
 
     Game game(board);
     game.getBoard().print();
@@ -114,19 +117,119 @@ int testMirroring()
 
 int testScore()
 {
-    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{4, 2, 0, 2}, std::vector<int>{2, 0, 0, 2},
-                                                    std::vector<int>{4, 0, 2, 0}, std::vector<int>{2, 4, 2, 2}});
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{4, 2, 0, 2},
+                                                    std::vector<int>{2, 0, 0, 2},
+                                                    std::vector<int>{4, 0, 2, 0},
+                                                    std::vector<int>{2, 4, 2, 2}});
 
     Game game(board);
-    game.getBoard().print();
     game.moveRight();
+    bool isEqual = (game.getScore() == 12);
+    DEB_BOOL(isEqual);
 
-    game.getBoard().print();
-
-    DEB(game.getScore()); // this should pe 12 - write test for it as well
     return 0;
 }
 
-int main(){
-    
+int testMoveUp()
+{
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{4, 2, 0, 2}, 
+                                                    std::vector<int>{2, 0, 0, 2},
+                                                    std::vector<int>{4, 0, 2, 0}, 
+                                                    std::vector<int>{2, 4, 2, 2}});
+
+    Game game(board);
+    game.moveUp();
+
+
+    Board<4, 4> result(std::vector<std::vector<int>>{std::vector<int>{4, 2, 4, 4},
+                                                     std::vector<int>{2, 4, 0, 2},
+                                                     std::vector<int>{4, 0, 0, 0},
+                                                     std::vector<int>{2, 0, 0, 0}});
+
+    bool isEqual = (game.getBoard() == result);
+    DEB_BOOL(isEqual);
+    NEWLINE();
+
+    return 0;
+}
+
+int testMoveDown()
+{
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{4, 2, 0, 2}, 
+                                                    std::vector<int>{2, 0, 0, 2},
+                                                    std::vector<int>{4, 0, 2, 0}, 
+                                                    std::vector<int>{2, 4, 2, 2}});
+
+    Game game(board);
+    game.moveDown();
+
+    Board<4, 4> result(std::vector<std::vector<int>>{std::vector<int>{4, 0, 0, 0},
+                                                     std::vector<int>{2, 0, 0, 0},
+                                                     std::vector<int>{4, 2, 0, 2},
+                                                     std::vector<int>{2, 4, 4, 4}});
+
+    // DEB(game.getBoard());
+    // DEB(result);
+
+    bool isEqual = (game.getBoard() == result);
+    DEB_BOOL(isEqual);
+    NEWLINE();
+
+    return 0;
+}
+
+int testMoveDown2()
+{
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{2, 0, 0, 0}, 
+                                                    std::vector<int>{4, 0, 0, 0},
+                                                    std::vector<int>{2, 4, 2, 0}, 
+                                                    std::vector<int>{16, 8, 4, 0}});
+
+    Game game(board);
+    game.moveDown();
+
+    Board<4, 4> result(std::vector<std::vector<int>>{std::vector<int>{2, 0, 0, 0}, 
+                                                     std::vector<int>{4, 0, 0, 0},
+                                                     std::vector<int>{2, 4, 2, 0}, 
+                                                     std::vector<int>{16, 8, 4, 0}});
+
+    // DEB(game.getBoard());
+    // DEB(result);
+
+    bool isEqual = (game.getBoard() == result);
+    DEB_BOOL(isEqual);
+    NEWLINE();
+
+    return 0;
+}
+
+
+int testCanMoveRight()
+{
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{2, 0, 0, 0}, 
+                                                    std::vector<int>{4, 0, 0, 0},
+                                                    std::vector<int>{2, 4, 2, 0}, 
+                                                    std::vector<int>{16, 8, 4, 0}});
+
+    Game game(board);
+    DEB_BOOL(game.canMoveRight());
+    NEWLINE();
+
+    return 0;
+}
+
+int main()
+{
+    Board<4, 4> board(std::vector<std::vector<int>>{std::vector<int>{2, 0, 0, 0}, 
+                                                    std::vector<int>{4, 0, 0, 0},
+                                                    std::vector<int>{2, 4, 2, 0}, 
+                                                    std::vector<int>{16, 8, 4, 0}});
+
+    Game game(board);
+    DEB_BOOL(game.canMoveRight());
+    DEB_BOOL(game.canMoveLeft());
+    DEB_BOOL(game.canMoveUp());
+    DEB_BOOL(game.canMoveDown());
+
+    return 0;
 }
