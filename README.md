@@ -47,7 +47,6 @@ each important lecture of my Master's degree will have an implementation here:
 It consists of two programs written in C++: 
 - a simple random location data generator: it tries to simulate random position data (including noise) from a forklift
 - location data processor which computes using the Kalman filter for processing data the speed and the total distance travelled using data received from the generator using MQTT broker.
-The two programs communicate via MQTT protocol.
 
 
 ## [Image Processing](./img_processing_library)
