@@ -11,21 +11,21 @@ This repo contains a series of projects that I wanted to implement for learning 
 - [ ] finish ray_tracing using cuda or look if it is ok
 
 
-## [Gaming](./gaming/README.md)
+## [Gaming](./gaming)
 - [ ] [Asteroids](./gaming/asteroids): game implemented using SFML <mark>**in progress**</mark>
 
 One can also find here games that I have automated: 
-- [ ] [2048](./gaming/fast2048/README.md), using OpenCV & X11 for screenshots and for simulating key presses
+- [ ] [2048](./gaming/fast2048), using OpenCV & X11 for screenshots and for simulating key presses
     - Monte Carlo Simulation on 2048 game
 - [ ] [Flappy Bird](./gaming/game_automation/flappy_bird), using OpenCV & X11 for screenshots 
 - [ ] [Pong](./gaming/game_automation/pong), using OpenCV & ADB to use the game on a mobile phone
 
 
-## [Computational Science and Engineering (CSE) Algorithms](./cse_algorithms/README.md)
+## [Computational Science and Engineering (CSE) Algorithms](./cse_algorithms)
 each important lecture of my Master's degree will have an implementation here:
-- [x] **Fluid Simulation**, discretizing Navier-Stokes equations and rendering using SDL2 library
-- [x] **Fourier Transform Visualization** using SFML
-- [ ] **Fourier Transform Drawing usind Epicycles** <mark>**in progress**</mark>
+- [x] [**Fluid Simulation**](./cse_algorithms/CFD), discretizing Navier-Stokes equations and rendering using SDL2 library
+- [x] [**Fourier Transform Visualization**](./cse_algorithms/fourier_transform) using SFML
+- [ ] [**Fourier Transform Drawing usind Epicycles**](./cse_algorithms/fourier_transform)  <mark>**in progress**</mark>
 - [ ] **Planet Simulation**, 
 - [x] [**Bezier Functions**](./cse_algorithms/bezier_functions) using SDL for rendering
 - [ ] make solvers for each iterative method; [Example](https://math.nist.gov/iml++/)
