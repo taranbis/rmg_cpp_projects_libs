@@ -23,7 +23,6 @@ set(RMG_BUILD_DEEP_LEARNING ON CACHE BOOL "Build Deep Learning Library" FORCE)
 
 #set(OPENCV_ENABLE_NONFREE ON)
 
-
 if(WIN32)
     set(BOOST_ROOT "C:/local/boost_1_73_0")
 endif()
