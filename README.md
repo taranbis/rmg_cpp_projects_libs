@@ -6,7 +6,7 @@ This repo contains a series of projects that I wanted to implement for learning 
 - [x] IoT project has to be fixed
 - [x] move allocator to allocator projects
 - [ ] Fast2048 needs to be finished and polished
-- [ ] Fourier Transform Visualization & Drawing needs to be finished & polished
+- [x] Fourier Transform Visualization & Drawing needs to be finished & polished
 - [ ] remove unneccessary files in CFD simulation
 - [ ] finish ray_tracing using cuda or look if it is ok
 
