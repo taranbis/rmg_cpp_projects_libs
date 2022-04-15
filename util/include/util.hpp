@@ -218,6 +218,29 @@ static void hexdump(FILE* fp, const char* name, const void* ptr, size_t len)
     }
 }
 
+template <typename T1, typename T2>
+requires std::floating_point<T1>&& std::floating_point<T2> 
+std::vector<double> linspace(T1 start_in, T2 end_in, int num_in)
+{
+    std::vector<double> linspaced;
+
+    double start = static_cast<double>(start_in);
+    double end = static_cast<double>(end_in);
+    double num = static_cast<double>(num_in);
+
+    if (num == 0) return linspaced;
+
+    if (num == 1) {
+        linspaced.push_back(start);
+        return linspaced;
+    }
+
+    const double delta = (end - start) / (num - 1);
+
+    for (int i = 0; i < num - 1; ++i) linspaced.push_back(start + delta * i);
+    linspaced.push_back(end); // I want to ensure that start and end are exactly the same as the input
+    return linspaced;
+}
 
 template <std::move_constructible Type>
 void swap(Type& i, Type& j)

@@ -12,27 +12,28 @@
 #include "util.hpp"
 #include "drawing_coords.hpp"
 
-/********************************************************************************
- *  TODO: fix this
- *******************************************************************************/
+/*************************************************************************************************************
+ * Given any number of random points, one could draw the resulting shape, by calculating the Discrete Fourier
+ * Transform and decomposing the discrete function into the respective frequencies and amplitudes. 
+ *************************************************************************************************************/
 
+static const std::vector<sf::Color> colors{sf::Color::Red,    sf::Color::Green,   sf::Color::Blue,
+                                           sf::Color::Yellow, sf::Color::Magenta, sf::Color::Cyan};
+
+/**
+ * @brief Epicycle are the circles that stacked together form the independent functions of which our function is
+ * composed
+ *
+ * - amplitude is the radius;
+ * - frequency how many times the cycle rotates;
+ * - phase is an offset: where the circular pattern begins
+ */
 struct Epicycle {
     double freq_{};
     double ampl_{};
     double phase_{};
 
     Epicycle(double freq, double ampl, double phase) : freq_(freq), ampl_(ampl), phase_(phase) {}
-
-    Epicycle(const Epicycle& other) = default;
-
-    Epicycle& operator=(const Epicycle& other) = default; /* {
-         if (this == &other) return *this;
-
-         this->freq_ = other.freq_;
-         this->ampl_ = other.ampl_;
-         this->phase_ = other.phase_;
-         return *this;
-     } */
 
     friend std::ostream& operator<<(std::ostream& os, const Epicycle& epicycle)
     {
@@ -41,37 +42,42 @@ struct Epicycle {
     }
 };
 
+/**
+ * @brief compute the discrete fourier transform of a discrete function given the points
+ *
+ * the math behind this is to take the signal and decompose it into a bunch of frequency components
+ */
 std::vector<Epicycle> computeDFT(const std::vector<double>& discreteFunction)
 {
     const std::size_t N = discreteFunction.size();
-    // std::vector<std::complex<double>> fourierSignal;
     std::vector<Epicycle> epicyles;
     for (std::size_t k = 0; k < N; ++k) {
+        // zk represents a point in the Fourier transform
         std::complex<double> zk{};
         for (std::size_t n = 0; n < N; ++n) {
-            const double phi = (2. * M_PI * k * n) / N;
+            const double phi = (2. * M_PI * k * n) / (double)N;
             zk += discreteFunction[n] * std::complex<double>(cos(phi), -sin(phi));
         }
-        zk /= N;
+        zk /= (double)N;
         const double freq = k;
         const double amp = sqrt(zk.real() * zk.real() + zk.imag() * zk.imag());
         const double phase = atan2(zk.imag(), zk.real());
 
         epicyles.emplace_back(freq, amp, phase);
-        // fourierSignal.push_back(std::move(zk));
     }
 
-    // for (const std::complex<double>& z : fourierSignal) std::cout << z << " -- ";
-    // std::cout << std::endl;
-    // for (const Epicycle& epicyle : epicyles) std::cout << epicyle << " -- ";
-    // std::cout << std::endl;
-
+    // should have the same size as discreteFunction
     return epicyles;
 }
 
-std::pair<sf::Vector2<double>, sf::Vector2<double>> drawEpicycle(
-            sf::RenderWindow* window, const std::vector<Epicycle>& fourierSignal,
-            double time, double originX, double originY, const std::vector<sf::Color>& colors, double rotation)
+/**
+ * @brief runningPoints is the centre of the next epicycle
+ * @returns coords of last runningPoint and coords of the computed point on the path`
+ */
+std::pair<sf::Vector2<double>, sf::Vector2<double>> drawEpicycles(sf::RenderWindow* window,
+                                                                  const std::vector<Epicycle>& fourierSignal,
+                                                                  double time, double startX, double startY,
+                                                                  double rotation)
 {
     std::vector<sf::CircleShape> circles{};
     std::vector<sf::CircleShape> runningPoints{};
@@ -81,11 +87,7 @@ std::pair<sf::Vector2<double>, sf::Vector2<double>> drawEpicycle(
     double x_sum = 0;
     double y_sum = 0;
 
-    double x = 0;
-    double y = 0;
-
     sf::CircleShape runningPoint(4);
-    // TODO: create a slider to select number of N
     for (size_t i = 0; i < fourierSignal.size(); ++i) {
         const double freq = fourierSignal[i].freq_;
         const double radius = fourierSignal[i].ampl_;
@@ -96,14 +98,14 @@ std::pair<sf::Vector2<double>, sf::Vector2<double>> drawEpicycle(
         circle.setFillColor(sf::Color::Transparent);
         circle.setOutlineThickness(1);
         if (circles.size() == 0) {
-            circle.setPosition(originX, originY); // if it is first point
+            circle.setPosition(startX, startY); // if it is first point
         } else {
             circle.setPosition(runningPoint.getPosition().x, runningPoint.getPosition().y);
         }
         circle.setOrigin(circle.getRadius(), circle.getRadius());
 
-        x = radius * cos(freq * time + phase + rotation);
-        y = radius * sin(freq * time + phase + rotation);
+        const double x = radius * cos(freq * time + phase + rotation);
+        const double y = radius * sin(freq * time + phase + rotation);
         x_sum += x;
         y_sum += y;
 
@@ -130,38 +132,8 @@ std::pair<sf::Vector2<double>, sf::Vector2<double>> drawEpicycle(
     for (const auto& line : lines) window->draw(line.data(), 2, sf::Lines);
     lines.clear();
 
-    // TODO: make lines between wave points
-    // for (sf::CircleShape& wavePoint : wave) {
-    //     wavePoint.setPosition(wavePoint.getPosition().x + 1, wavePoint.getPosition().y);
-    // }
-
-    // for (std::array<sf::Vertex, 2>& waveLine : waveLines) {
-    //     waveLine[0].position = sf::Vector2f(waveLine[0].position.x + 1, waveLine[0].position.y);
-    //     waveLine[1].position = sf::Vector2f(waveLine[1].position.x + 1, waveLine[1].position.y);
-    // }
-
-    // // Generate wave point
-    // sf::CircleShape newWavePoint(0.5);
-    // newWavePoint.setOutlineColor(sf::Color::Blue);
-    // newWavePoint.setFillColor(sf::Color::Blue);
-    // newWavePoint.setOrigin(newWavePoint.getRadius(), newWavePoint.getRadius());
-    // newWavePoint.setPosition(originX + 250, originY + y_sum);
-
-    // if (wave.size() != 0) {
-    //     const std::array<sf::Vertex, 2> newWaveLine = std::array<sf::Vertex, 2>{
-    //                 sf::Vertex(sf::Vector2f(wave.front().getPosition().x, wave.front().getPosition().y),
-    //                            newWavePoint.getFillColor()),
-    //                 sf::Vertex(sf::Vector2f(newWavePoint.getPosition().x, newWavePoint.getPosition().y),
-    //                            newWavePoint.getFillColor())};
-
-    //     waveLines.emplace_front(newWaveLine);
-    // }
-    // wave.emplace_front(newWavePoint);
-    // if (wave.rbegin()->getPosition().x > window->getSize().x) {
-    //     waveLines.pop_back();
-    //     wave.pop_back();
-    // }
-    return {{runningPoint.getPosition().x, runningPoint.getPosition().y}, {x, y}};
+    // return last runningPoint on the outside of the last epicycle and the calculated path point
+    return {{runningPoint.getPosition().x, runningPoint.getPosition().y}, {x_sum, y_sum}};
 }
 
 void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf::Event> event,
@@ -170,72 +142,73 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
     const double midX = window->getSize().x / 2.;
     const double midY = window->getSize().y / 2.;
     double time = 0;
-    // std::deque<sf::CircleShape> waveY{};
-    // std::deque<std::array<sf::Vertex, 2>> waveLinesY{};
-    // std::deque<sf::CircleShape> waveX{};
-    // std::deque<std::array<sf::Vertex, 2>> waveLinesX{};
-
-    // TODO: builder pattern to build points
-    const std::vector<sf::Color> colors{sf::Color::Red,    sf::Color::Green,   sf::Color::Blue,
-                                        sf::Color::Yellow, sf::Color::Magenta, sf::Color::Cyan};
-
-    // constexpr double mainX = 250;
-    // const double mainY = midY;
-
-    // number of points for the discrete function
-    const std::size_t N = drawingCoords.size();
-    // fourierSignal = fourier(signal)
 
     std::vector<double> funcX{};
     std::vector<double> funcY{};
-    for (std::size_t i = 0; i < N; i += 10) {
-        // funcY.emplace_back(150 * cos(i * 2. * M_PI / N));
-        // funcX.emplace_back(150 * sin(i * 2. * M_PI / N));
-
-        funcX.emplace_back(drawingCoords[i].x + 250);
-        funcY.emplace_back(drawingCoords[i].y + 250);
+    for (std::size_t i = 0; i < drawingCoords.size(); i += 5) {
+        funcX.emplace_back(drawingCoords[i].x);
+        funcY.emplace_back(drawingCoords[i].y);
     }
-    const std::vector<Epicycle> fourierSignalX = computeDFT(funcX);
-    const std::vector<Epicycle> fourierSignalY = computeDFT(funcY);
 
-    // sort(fourierSignalY.begin(), fourierSignalY.end(), [](const Epicycle& epicycle1, const Epicycle& epicycle2)
-    // { return epicycle1.ampl_ > epicycle2.ampl_; }); sort(fourierSignalX.begin(), fourierSignalX.end(), [](const
-    // Epicycle& epicycle1, const Epicycle& epicycle2) { return epicycle1.ampl_ > epicycle2.ampl_; });
+    // fourierTransform = fourier(function)
+    std::vector<Epicycle> fourierSignalX = computeDFT(funcX);
+    std::vector<Epicycle> fourierSignalY = computeDFT(funcY);
 
+    sort(fourierSignalY.begin(), fourierSignalY.end(),
+         [](const auto& epicycle1, const auto& epicycle2) { return epicycle1.ampl_ > epicycle2.ampl_; });
+    sort(fourierSignalX.begin(), fourierSignalX.end(),
+         [](const Epicycle& epicycle1, const Epicycle& epicycle2) { return epicycle1.ampl_ > epicycle2.ampl_; });
+
+    // instead of a wave, i now need an array which is the full path
     std::deque<sf::Vector2<double>> path{};
+    const double dt = M_PI * 2. / (double)fourierSignalY.size();
     while (!stopProgram->load(std::memory_order_relaxed) && window->isOpen()) {
         window->clear(sf::Color::Black);
 
-        const double dt = M_PI * 2 / N;
-        time += dt;
+        // pathPoint represents the point in our function;
+        // runningPoint is the last point on the last epicycle
+        auto [runningPointX, pathPointX] = drawEpicycles(window.get(), fourierSignalX, time, 200, 500, 0);
+        auto [runningPointY, pathPointY] = drawEpicycles(window.get(), fourierSignalY, time, 1000, 200, M_PI_2);
 
-        auto [runningPointY, vy] = drawEpicycle(window.get(), fourierSignalY, time, 1000, 200, colors, M_PI_2);
-        auto [runningPointX, vx] = drawEpicycle(window.get(), fourierSignalX, time, 200, 500, colors, 0);
+        path.emplace_front(midX + pathPointX.x, midY + 200 + pathPointY.y);
 
-        path.emplace_front(midX + vx.x, midY + vy.y);
-
+        // Draw the poth after getting a new point after computing the whole set of epicycles
+        std::optional<sf::Vector2<double>> lastPoint;
         for (const auto& pathPoint : path) {
             sf::CircleShape circle(0.5);
             circle.setOutlineColor(sf::Color::Blue);
             circle.setFillColor(sf::Color::Transparent);
-            circle.setOutlineThickness(1);
             circle.setPosition(pathPoint.x, pathPoint.y);
             circle.setOrigin(circle.getRadius(), circle.getRadius());
             window->draw(circle);
+
+            if (lastPoint) {
+                const sf::Vertex line[] = {sf::Vertex(sf::Vector2f(lastPoint->x, lastPoint->y), sf::Color::Blue),
+                                           sf::Vertex(sf::Vector2f(pathPoint.x, pathPoint.y), sf::Color::Blue)};
+                window->draw(line, 2, sf::Lines);
+            }
+            lastPoint.emplace(pathPoint);
         }
 
+        // Line from the x epicycle to the last point in path
         const sf::Vertex line1[] = {sf::Vertex(sf::Vector2f(runningPointX.x, runningPointX.y), sf::Color::White),
                                     sf::Vertex(sf::Vector2f(path.front().x, path.front().y), sf::Color::White)};
-
         window->draw(line1, 2, sf::Lines);
 
+        // Line from the y epicycle to the last point in path
         const sf::Vertex line2[] = {sf::Vertex(sf::Vector2f(runningPointY.x, runningPointY.y), sf::Color::White),
                                     sf::Vertex(sf::Vector2f(path.front().x, path.front().y), sf::Color::White)};
-
         window->draw(line2, 2, sf::Lines);
 
         window->display();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        time += dt;
+
+        if (time > M_PI * 2.) {
+            time = 0;
+            path.clear();
+        }
     }
 }
 
@@ -248,7 +221,6 @@ int main()
 
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
-
     const std::shared_ptr<sf::RenderWindow> window(new sf::RenderWindow(
                 sf::VideoMode(sizeX, sizeY, 64), " Fourier Transform ", sf::Style::Default, settings));
     const std::shared_ptr<sf::Event> event(new sf::Event());

@@ -11,15 +11,8 @@
 #include "util.hpp"
 
 /********************************************************************************
- *      Draw sawtooth and/or step function
+ * Implement a visualization of a Fourier Series for the sawtooth function
  *******************************************************************************/
-
-void calculateFFT()
-{
-    // DEB_SHORT(elapsedTime);
-    // DEB_SHORT(time);
-    // NEWLINE();
-}
 
 void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf::Event> event,
                    std::atomic<bool>* stopProgram)
@@ -29,14 +22,14 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
     sf::Clock clock{};
     double time = 0;
     std::deque<sf::CircleShape> wave{};
-    std::deque< std::array<sf::Vertex, 2>> waveLines{};
+    std::deque<std::array<sf::Vertex, 2>> waveLines{};
 
-    // TODO: builder pattern to build points
 
     // Number of waves (circles) stacked (added)
     std::size_t N = 500;
 
-    std::vector<sf::Color> colors{sf::Color::Red,    sf::Color::Green,   sf::Color::Blue,
+    // TODO: builder pattern to build points
+    const std::vector<sf::Color> colors{sf::Color::Red,    sf::Color::Green,   sf::Color::Blue,
                                   sf::Color::Yellow, sf::Color::Magenta, sf::Color::Cyan};
 
     std::vector<sf::CircleShape> circles{};
@@ -59,13 +52,13 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
         double y_sum = 0;
 
         sf::CircleShape runningPoint(4);
-        //TODO: create a slider to select number of N
+        // TODO: create a slider to select number of N
         for (size_t i = 0; i < N; ++i) {
-			// Square wave
+            // Square wave
             // std::size_t n = i * 2 + 1;
             // double radius = baseRadius * (4 / (n * M_PI));
 
-            double radius = baseRadius * (2 / ((i+1) * pow(-1, i+1) * M_PI));
+            double radius = baseRadius * (2 / ((i + 1) * pow(-1, i + 1) * M_PI));
 
             sf::CircleShape circle(radius);
             circle.setOutlineColor(colors[i]);
@@ -84,25 +77,24 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
             }
             circle.setOrigin(circle.getRadius(), circle.getRadius());
 
-			// Square wave
+            // Square wave
             // x_sum += radius * cos(n * time);
             // y_sum += radius * sin(n * time);
 
             // double x = radius * cos(n * time);
             // double y = radius * sin(n * time);
 
-			//  sawtooth wave
-            x_sum += radius * cos((i+1) * time);
-            y_sum += radius * sin((i+1) * time);
+            //  sawtooth wave
+            x_sum += radius * cos((i + 1) * time);
+            y_sum += radius * sin((i + 1) * time);
 
-            double x = radius * cos((i+1) * time);
-            double y = radius * sin((i+1) * time);
+            double x = radius * cos((i + 1) * time);
+            double y = radius * sin((i + 1) * time);
 
             runningPoint.setOutlineColor(colors[i]);
             runningPoint.setFillColor(colors[i]);
             runningPoint.setPosition(circle.getPosition().x + x, circle.getPosition().y + y);
             runningPoint.setOrigin(runningPoint.getRadius(), runningPoint.getRadius());
-            // runningPoint.setOrigin(runningPoint.getRadius(), runningPoint.getRadius());
 
             std::array<sf::Vertex, 2> line = {
                         sf::Vertex(sf::Vector2f(circle.getPosition().x, circle.getPosition().y), colors[i]),
@@ -121,14 +113,13 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
         for (const auto& line : lines) window->draw(line.data(), 2, sf::Lines);
         lines.clear();
 
-        // TODO: make lines between wave points
         for (sf::CircleShape& wavePoint : wave) {
             wavePoint.setPosition(wavePoint.getPosition().x + 1, wavePoint.getPosition().y);
         }
 
         for (std::array<sf::Vertex, 2>& waveLine : waveLines) {
-            waveLine[0].position =  sf::Vector2f(waveLine[0].position.x + 1, waveLine[0].position.y);
-            waveLine[1].position =  sf::Vector2f(waveLine[1].position.x + 1, waveLine[1].position.y);
+            waveLine[0].position = sf::Vector2f(waveLine[0].position.x + 1, waveLine[0].position.y);
+            waveLine[1].position = sf::Vector2f(waveLine[1].position.x + 1, waveLine[1].position.y);
         }
 
         // Generate wave point
@@ -161,16 +152,11 @@ void processEvents(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf:
 
         window->draw(connectLine, 2, sf::Lines);
 
-        // DEB_SHORT(wave.size());
-        // NEWLINE();
+        for (const sf::CircleShape& wavePoint : wave) window->draw(wavePoint);
 
-        for (const sf::CircleShape& wavePoint : wave){
-            window->draw(wavePoint);
-        } 
-        for (const std::array<sf::Vertex, 2>& waveLine : waveLines){
+        for (const std::array<sf::Vertex, 2>& waveLine : waveLines) {
             window->draw(waveLine.data(), 2, sf::Lines);
-        } 
-            
+        }
 
         window->display();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
