@@ -1,18 +1,19 @@
 This repo contains a series of projects that I wanted to implement for learning or using or just for fun(e.g. game automation), in C++. Although these are all different projects, I considered keeping them all of them in this repo as it easier to maintain. They can be built separately by configuring the perameters in CMakeLists.txt of the root path.
 
 ### TODO
+- [ ] remove unneccessary files in CFD simulation
+- [ ] finish ray_tracing using cuda or look if it is ok
+- [ ] finish PNG decoder
+- [ ] Fast2048 needs to be finished and polished
 - [x] util.hpp has to be fixed
 - [x] decode_jpg has to be fixed
 - [x] IoT project has to be fixed
 - [x] move allocator to allocator projects
-- [ ] Fast2048 needs to be finished and polished
 - [x] Fourier Transform Visualization & Drawing needs to be finished & polished
-- [ ] remove unneccessary files in CFD simulation
-- [ ] finish ray_tracing using cuda or look if it is ok
 
 
 ## [Gaming](./gaming)
-- [ ] [Asteroids](./gaming/asteroids): game implemented using SFML <mark>**in progress**</mark>
+- [ ] [Asteroids](./gaming/asteroids): game implemented using SFML <em>**!! in progress !!**</em>
 
 One can also find here games that I have automated: 
 - [ ] [2048](./gaming/fast2048), using OpenCV & X11 for screenshots and for simulating key presses
@@ -25,7 +26,7 @@ One can also find here games that I have automated:
 each important lecture of my Master's degree will have an implementation here:
 - [x] [**Fluid Simulation**](./cse_algorithms/CFD), discretizing Navier-Stokes equations and rendering using SDL2 library
 - [x] [**Fourier Transform Visualization**](./cse_algorithms/fourier_transform) using SFML
-- [ ] [**Fourier Transform Drawing usind Epicycles**](./cse_algorithms/fourier_transform)  <mark>**in progress**</mark>
+- [x] [**Fourier Transform Drawing usind Epicycles**](./cse_algorithms/fourier_transform) using SFML
 - [ ] **Planet Simulation**, 
 - [x] [**Bezier Functions**](./cse_algorithms/bezier_functions) using SDL for rendering
 - [ ] make solvers for each iterative method; [Example](https://math.nist.gov/iml++/)
@@ -38,9 +39,9 @@ each important lecture of my Master's degree will have an implementation here:
 
 ### [Networking](./util/network)
 - [x] implement tcp connection manager (multiple connections, client, server)
-- [x] implement a basic http web server & basic client <mark>**in progress**</mark>
+- [x] implement a basic http web server & basic client <em>**!! in progress !!**</em>
     - still to implement: better parsing and addition of request/response headers
-- [ ] implement WebSocket server & WS client <mark>**in progress**</mark>
+- [ ] implement WebSocket server & WS client <em>**!! in progress !!**</em>
 
 
 ## [IoT Project](./IoT_project)
@@ -50,9 +51,9 @@ It consists of two programs written in C++:
 
 
 ## [Image Processing](./img_processing_library)
-- [ ] [Fourier Transform](./img_processing_library/fourier_transform) for eliminating noise in an image by converting it to frequency domain and back to spatial domain
-- [ ] JPEG decoder <mark>**in progress**</mark>
-- [ ] PNG decoder <mark>**in progress**</mark>
+- [ ] [Fourier Transform](./img_processing_library/fourier_transform) for eliminating noise in an image by converting it to frequency domain and back to spatial domain <em>**!! in progress !!**</em>
+- [ ] JPEG decoder <em>**!! in progress !!**</em>
+- [ ] PNG decoder <em>**!! in progress !!**</em>
 
 
 ## [Deep Learning](./deep_learning)
@@ -67,13 +68,12 @@ Resources:
 
 ## [Computer Graphics](./computer_graphics)
 - [ ] [Algorithms Visualization, e.g. Bubble Sort](./computer_graphics/algorithms) using SFML
-- [ ] [ray tracing](./computer_graphics/ray_tracing) using Cuda <mark>**in progress**</mark>
+- [ ] [ray tracing](./computer_graphics/ray_tracing) using Cuda <em>**!! in progress !!**</em>
 - [ ] Triangle Rasterization: [Triangle Rasterization Paper](https://joshbeam.com/articles/triangle_rasterization/)
 
 
 ## [Allocator](./allocator)
-implementation of different allocators and benchmarks for std::pmr
-
+implementation of different allocators and benchmarks for std::pmr: 
 - [ ] implement Bucketizer, FreeList 
 - [x] implement PoolAllocator, MemoryPool and Segregator 
 - [x] Tracking Allocator, Mallocator
@@ -100,8 +100,8 @@ Implementation of different helpful data structures:
 - [ ] Priority Queue 
 
 #### Useful Documentation:
-- [Modern C++ features: C++20/17/14/11](https://github.com/AnthonyCalandra/modern-cpp-features)
 - [Cpp Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
+- [Modern C++ features: C++20/17/14/11](https://github.com/AnthonyCalandra/modern-cpp-features)
 - [Guidelines Support Library](https://github.com/microsoft/GSL)
 
 ### Commit messages:

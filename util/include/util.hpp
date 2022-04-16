@@ -219,14 +219,14 @@ static void hexdump(FILE* fp, const char* name, const void* ptr, size_t len)
 }
 
 template <typename T1, typename T2>
-requires std::floating_point<T1>&& std::floating_point<T2> 
-std::vector<double> linspace(T1 start_in, T2 end_in, int num_in)
+requires std::floating_point<T1> && std::floating_point<T2> 
+std::vector<double> linspace(T1 startIn, T2 endIn, int numIn)
 {
     std::vector<double> linspaced;
 
-    double start = static_cast<double>(start_in);
-    double end = static_cast<double>(end_in);
-    double num = static_cast<double>(num_in);
+    double start = static_cast<double>(startIn);
+    double end = static_cast<double>(endIn);
+    double num = static_cast<double>(numIn);
 
     if (num == 0) return linspaced;
 
