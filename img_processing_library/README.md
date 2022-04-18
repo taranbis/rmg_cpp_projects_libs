@@ -24,3 +24,5 @@ Median filter
 6. Image Processing Documentation
 
 kernels and convolutions
+
+7. Image filtering in frequency domain (Fourier Transform)
