@@ -5,12 +5,12 @@ target_include_directories(img_proc_fourier_transform PUBLIC  "include" "../../u
 
 # find_package(Eigen3 3.3 REQUIRED)
 # find_package(Boost REQUIRED)
-# find_package(Threads REQUIRED)
+find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)
 # find_package(X11 REQUIRED)
 # include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-# target_link_libraries(img_proc_fourier_transform Threads::Threads)
+target_link_libraries(img_proc_fourier_transform Threads::Threads)
 target_link_libraries(img_proc_fourier_transform ${OpenCV_LIBS})
 # target_link_libraries(img_proc_fourier_transform X11::X11)
 # target_link_libraries(img_proc_fourier_transform X11::Xtst)
