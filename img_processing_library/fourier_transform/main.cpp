@@ -10,6 +10,7 @@
 #include <opencv2/quality/qualitymse.hpp>
 
 #include "util.hpp"
+#include "cv_utils.hpp"
 
 /******************************************************************************************************************
  * !Implement fourier transform filter!
@@ -422,7 +423,9 @@ int main()
 
     cv::imshow("Display window", img);
     img.convertTo(img, CV_64F);
-    DEB(img.type()); // CV_64FC1
+    // DEB(img.type()); // CV_64FC1
+
+    DEB(rmg::typeToString(img.type()));
 
     // LaplaceFilter laplaceFilterNaive(true);
     // LaplaceFilter laplaceFilterOpenCV(false);
