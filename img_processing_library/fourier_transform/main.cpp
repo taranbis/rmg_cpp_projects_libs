@@ -423,9 +423,7 @@ int main()
 
     cv::imshow("Display window", img);
     img.convertTo(img, CV_64F);
-    // DEB(img.type()); // CV_64FC1
-
-    DEB(rmg::typeToString(img.type()));
+    DEB(cv::typeToString(img.type())); // CV_64FC1
 
     // LaplaceFilter laplaceFilterNaive(true);
     // LaplaceFilter laplaceFilterOpenCV(false);
