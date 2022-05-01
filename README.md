@@ -51,7 +51,7 @@ It consists of two programs written in C++:
 
 
 ## [Image Processing](./img_processing_library)
-- [ ] [Fourier Transform](./img_processing_library/fourier_transform) for eliminating noise in an image by converting it to frequency domain and back to spatial domain <em>**!! in progress !!**</em>
+- [x] [Fourier Transform](./img_processing_library/fourier_transform) for eliminating noise in an image by converting it to frequency domain and back to spatial domain
 - [ ] JPEG decoder <em>**!! in progress !!**</em>
 - [ ] PNG decoder <em>**!! in progress !!**</em>
 
