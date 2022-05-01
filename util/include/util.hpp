@@ -157,7 +157,7 @@ typedef unsigned int uintptr_t;
 #define ALL(x) x.begin(), x.end()
 #define SORTALL(x) sort(ALL(x))
 
-#define DEB(x) std::cout << #x << " =  " << x << std::endl
+#define DEB(x) std::cout << "File: " << __FILE__ << " || "<< "Line: " << __LINE__ << " || " << #x << " =  " << x << std::endl
 #define DEB_HEX(x) std::cout << #x << " = 0x" << std::hex << x << std::dec << " "
 #define DEB_LONG(x) std::cout << std::setw(50) << #x << " = " << std::setw(12) << x << " "
 #define DEB_SHORT(x) std::cout << std::setw(25) << #x << " = " << std::setw(5) << x << " "
