@@ -13,7 +13,7 @@
 #include "cv_utils.hpp"
 
 /******************************************************************************************************************
- * !Implement fourier transform filter!
+ ** Implement fourier transform filter!
  *
  * The result of the transformation is complex numbers. Displaying this is possible either via a real image and a
  * complex image or via a magnitude and a phase image.
