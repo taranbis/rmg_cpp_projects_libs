@@ -84,7 +84,7 @@ private:
     // const uint32_t TrainSize = 4500;
     // const uint32_t TestSize = 500;
     const uint32_t TrainSize = 10;
-    const uint32_t TestSize = 10;
+    const uint32_t TestSize = 2;
 
     const uint32_t ImageRows = 512;
     const uint32_t ImageColumns = 512;
@@ -105,7 +105,8 @@ private:
     {
         const auto count = train ? TrainSize : TestSize;
 
-        Tensor rv = torch::empty({count, ImageRows * ImageColumns * ImageChannels}, torch::kByte);
+        // Tensor rv = torch::empty({count, ImageRows * ImageColumns * ImageChannels}, torch::kByte);
+        Tensor rv = torch::empty({count, ImageChannels, ImageRows, ImageColumns}, torch::kByte);
 
         const auto path = joinPaths(root, "all_data.json");
         const auto imagesPath = joinPaths(root, "images");
@@ -125,6 +126,7 @@ private:
         }
 
         DEB(rv.sizes());
+        DEB(rv.scalar_type());
         return rv;
     }
 
@@ -140,17 +142,17 @@ private:
         jsonFile >> json;
         // std::cout << std::setw(4) << j << std::endl;
 
-        Tensor rv = torch::empty({count, 68 * 2}, torch::kDouble);
+        Tensor rv = torch::empty({count, 68 * 2}, torch::kFloat32);
 
-        //TODO:remove
-        Tensor images = torch::empty({count, 786432}, torch::kByte);
+        // TODO:remove
+        // Tensor images = torch::empty({count, 786432}, torch::kByte);
 
         for (int j = 0; j < count; ++j) {
             nlohmann::json faceLandmarks = json.at(std::to_string(j)).at("face_landmarks");
 
-            //TODO:remove
-            const auto imgPath = joinPaths(imagesPath, json.at(std::to_string(j)).at("file_name"));
-            images[j] = getImgData(imgPath);
+            // //TODO:remove
+            // const auto imgPath = joinPaths(imagesPath, json.at(std::to_string(j)).at("file_name"));
+            // images[j] = getImgData(imgPath);
 
             for (int i = 0; i < faceLandmarks.size(); ++i) {
                 int x = faceLandmarks[i][0];
@@ -171,7 +173,7 @@ private:
     {
         cv::Mat img = rmg::readImg(path);
         assert(img.rows == ImageRows);
-        assert(img.cols  == ImageColumns);
+        assert(img.cols == ImageColumns);
         assert(img.channels() == ImageChannels);
 
         //! doesn't take ownership
@@ -180,7 +182,9 @@ private:
         // tensor = tensor.toType(torch::kFloat).sub(127.5).mul(0.0078125);
         // auto newTensor = tensor.to(torch::kFloat32) /* .div_(255) */;
 
-        return tensor.flatten();
+        tensor = tensor.view({3,512,512});
+         return tensor;
+        // return tensor.flatten();
     };
 
 public:
@@ -188,8 +192,10 @@ public:
     {
         int64_t height = tensor.size(0);
         int64_t width = tensor.size(1);
+        DEB(height);
+        DEB(width);
         cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3, tensor.data_ptr<uchar>());
-        for (int i = 0; i < faceLandmarks.sizes()[0]/2; ++i) {
+        for (int i = 0; i < faceLandmarks.sizes()[0] / 2; ++i) {
             int x = faceLandmarks[2 * i].item<double>();
             int y = faceLandmarks[2 * i + 1].item<double>();
             cv::circle(img, cv::Point{x, y}, 1, cv::Scalar{0, 0, 255}, 5);

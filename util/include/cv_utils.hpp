@@ -28,7 +28,7 @@ void printType(const cv::Mat& mat)
         case CV_32S: rv = "32S";  expl = "Mat.at<int>(y,x)"; break; 
         case CV_32F: rv = "32F";  expl = "Mat.at<float>(y,x)"; break; 
         case CV_64F: rv = "64F";  expl = "Mat.at<double>(y,x)"; break; 
-        default:     rv = "User"; expl = "Mat.at<UKNOWN>(y,x)"; break; 
+        default:     rv = "User"; expl = "Mat.at<UNKNOWN>(y,x)"; break; 
     }
     rv += "C";
     rv += (chans + '0');

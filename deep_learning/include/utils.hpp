@@ -22,6 +22,7 @@ torch::Tensor cvMatToTorchTensor(const cv::Mat& mat)
     //! doesn't take ownership
     torch::Tensor tensor = torch::from_blob(mat.data, {mat.rows, mat.cols, mat.channels()}, at::kByte);
     return tensor.to(torch::kFloat32);
+    // return tensor;
 
     //* maybe also possible (didn't get it working)
     // Tensor tensor = torch::empty({img.rows*img.cols * img.channels()}, torch::kByte);
