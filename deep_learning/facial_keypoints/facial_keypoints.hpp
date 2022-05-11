@@ -19,6 +19,8 @@
 #include "util.hpp"
 #include "cv_utils.hpp"
 
+#include "utils.hpp"
+
 namespace torch::data::datasets
 {
 namespace
@@ -44,15 +46,14 @@ public:
 
     /// Loads the  dataset from the `root` path.
     explicit FaceLandmarksDataset(const std::string& root, Mode mode = Mode::Train)
-            : images_(readImages(root, mode == Mode::Train)), targets_(readTargets(root, mode == Mode::Train))
+            : images_(readImages(root, mode == Mode::Train)), keyPoints_(readTargets(root, mode == Mode::Train))
     {
     }
 
     /// Returns the `Example` at the given `index`.
     Example<> get(size_t index) override
     {
-        return {images_[index], targets_[index]};
-        // return images_[index];
+        return {images_[index], keyPoints_[index]};
     }
 
     /// Returns the size of the dataset.
@@ -61,8 +62,7 @@ public:
         return images_.size(0);
     }
 
-    /// Returns true if this is the training subset of MNIST.
-    // NOLINTNEXTLINE(bugprone-exception-escape)
+    /// Returns true if this is the training subset
     bool is_train() const noexcept
     {
         return images_.size(0) == TrainSize;
@@ -77,22 +77,24 @@ public:
     /// Returns all targets stacked into a single tensor.
     const Tensor& targets() const
     {
-        return targets_;
+        return keyPoints_;
     }
 
 private:
-    // const uint32_t TrainSize = 60000;
-    // const uint32_t TestSize = 10000;
+    // const uint32_t TrainSize = 4500;
+    // const uint32_t TestSize = 500;
     const uint32_t TrainSize = 10;
     const uint32_t TestSize = 10;
 
-    const uint32_t kImageRows = 28;
-    const uint32_t kImageColumns = 28;
+    const uint32_t ImageRows = 512;
+    const uint32_t ImageColumns = 512;
+    const uint32_t ImageChannels = 3;
 
     Tensor images_;
-    Tensor targets_;
+    Tensor keyPoints_;
 
-    std::string join_paths(std::string head, const std::string& tail)
+private:
+    std::string joinPaths(std::string head, const std::string& tail)
     {
         if (head.back() != '/') head.push_back('/');
         head += tail;
@@ -101,76 +103,95 @@ private:
 
     Tensor readImages(const std::string& root, bool train)
     {
-        const auto path = join_paths(root, "images/00001.png");
-        // std::ifstream images(path, std::ios::binary);
-        // TORCH_CHECK(images, "Error opening images file at ", path);
-
         const auto count = train ? TrainSize : TestSize;
 
-        const std::string imagePath = cv::samples::findFile(path);
-        cv::Mat img = cv::imread(imagePath); // CV_8UC1
-        const int rows = img.rows;
-        const int cols = img.cols;
-        if (img.empty()) { std::cerr << "Could not read the image: " << imagePath << std::endl; }
-        std::cout << "Read the image: " << imagePath << std::endl;
+        Tensor rv = torch::empty({count, ImageRows * ImageColumns * ImageChannels}, torch::kByte);
 
-        // cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE); // Create Window
-        // cv::imshow("Display window", img);
-
-        // int k = cv::waitKey(25); // Wait for a keystroke in the window
-
-        // // From http://yann.lecun.com/exdb/mnist/
-        //   expect_int32(images, count);
-
-        // auto tensor = torch::empty({count, 1, rows, cols}, torch::kByte);
-        // // images.read(reinterpret_cast<char*>(tensor.data_ptr()), tensor.numel());
-        // return tensor.to(torch::kFloat32).div_(255);
-
-        // DEB(img.size());
-        // uchar* buffer = new uchar[img.rows * img.cols * img.channels()];
-        // memcpy(img.data, buffer, img.rows * img.cols * img.channels());
-
-        // //TODO: doesn't take ownership
-        Tensor tensor = torch::from_blob(img.data, {img.rows, img.cols, img.channels()}, at::kByte);
-        tensor = tensor.flatten();
-        // tensor.unsqueeze_(0);
-        // tensor = tensor.toType(torch::kFloat).sub(127.5).mul(0.0078125);
-        auto newTensor = tensor.to(torch::kFloat32) /* .div_(255) */;
-        // // DEB(newTensor);
-
-        return newTensor;
-    }
-
-    Tensor readTargets(const std::string& root, bool train)
-    {
-        // read a JSON file
-        const auto path = join_paths(root, "all_data.json");
+        const auto path = joinPaths(root, "all_data.json");
+        const auto imagesPath = joinPaths(root, "images");
         std::ifstream jsonFile(path);
         nlohmann::json j;
         jsonFile >> j;
 
-        // serialize to standard output
-        // std::cout << std::setw(4) << j << std::endl;
-        // std::cout << std::setw(4) << j.at("0") << std::endl;
-        // DEB(j.size());
-        nlohmann::json faceLandmarks = j.at("1").at("face_landmarks");
+        // // images.read(reinterpret_cast<char*>(tensor.data_ptr()), tensor.numel());
+        // return tensor.to(torch::kFloat32).div_(255);
 
-        const auto imgPath = join_paths(root, "images/00001.png");
+        // uchar* buffer = new uchar[img.rows * img.cols * img.channels()];
+        // memcpy(img.data, buffer, img.rows * img.cols * img.channels());
+
+        for (int i = 0; i < count; ++i) {
+            const auto imgPath = joinPaths(imagesPath, j.at(std::to_string(i)).at("file_name"));
+            rv[i] = getImgData(imgPath);
+        }
+
+        DEB(rv.sizes());
+        return rv;
+    }
+
+    Tensor readTargets(const std::string& root, bool train)
+    {
         const auto count = train ? TrainSize : TestSize;
 
-        const std::string imagePath = cv::samples::findFile(imgPath);
-        cv::Mat img = cv::imread(imagePath); // CV_8UC1
-        const int rows = img.rows;
-        const int cols = img.cols;
-        if (img.empty()) { std::cerr << "Could not read the image: " << imagePath << std::endl; }
-        std::cout << "Read the image: " << imagePath << std::endl;
+        // read a JSON file
+        const auto path = joinPaths(root, "all_data.json");
+        const auto imagesPath = joinPaths(root, "images");
+        std::ifstream jsonFile(path);
+        nlohmann::json json;
+        jsonFile >> json;
+        // std::cout << std::setw(4) << j << std::endl;
 
-        // DEB(img.size());
-        // rmg::printType(img);
+        Tensor rv = torch::empty({count, 68 * 2}, torch::kDouble);
 
-        for (int i = 0; i < faceLandmarks.size(); ++i) {
-            int x = faceLandmarks[i][0];
-            int y = faceLandmarks[i][1];
+        //TODO:remove
+        Tensor images = torch::empty({count, 786432}, torch::kByte);
+
+        for (int j = 0; j < count; ++j) {
+            nlohmann::json faceLandmarks = json.at(std::to_string(j)).at("face_landmarks");
+
+            //TODO:remove
+            const auto imgPath = joinPaths(imagesPath, json.at(std::to_string(j)).at("file_name"));
+            images[j] = getImgData(imgPath);
+
+            for (int i = 0; i < faceLandmarks.size(); ++i) {
+                int x = faceLandmarks[i][0];
+                int y = faceLandmarks[i][1];
+
+                rv[j][i * 2] = x;
+                rv[j][i * 2 + 1] = y;
+            }
+        }
+
+        // for (int j = 0; j < count; ++j) displayKeyPointsTorch(images[j].view({512, 512, 3}), rv[j]);
+
+        DEB(rv.sizes());
+        return rv;
+    }
+
+    Tensor getImgData(const std::string& path)
+    {
+        cv::Mat img = rmg::readImg(path);
+        assert(img.rows == ImageRows);
+        assert(img.cols  == ImageColumns);
+        assert(img.channels() == ImageChannels);
+
+        //! doesn't take ownership
+        Tensor tensor = rmg::cvMatToTorchTensor(img);
+        // tensor.unsqueeze_(0);
+        // tensor = tensor.toType(torch::kFloat).sub(127.5).mul(0.0078125);
+        // auto newTensor = tensor.to(torch::kFloat32) /* .div_(255) */;
+
+        return tensor.flatten();
+    };
+
+public:
+    static void displayKeyPoints(Tensor tensor, Tensor faceLandmarks)
+    {
+        int64_t height = tensor.size(0);
+        int64_t width = tensor.size(1);
+        cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3, tensor.data_ptr<uchar>());
+        for (int i = 0; i < faceLandmarks.sizes()[0]/2; ++i) {
+            int x = faceLandmarks[2 * i].item<double>();
+            int y = faceLandmarks[2 * i + 1].item<double>();
             cv::circle(img, cv::Point{x, y}, 1, cv::Scalar{0, 0, 255}, 5);
         }
 
@@ -178,8 +199,6 @@ private:
         cv::imshow("Display window", img);
 
         int k = cv::waitKey(0); // Wait for a keystroke in the window
-
-        return {};
     }
 };
 
