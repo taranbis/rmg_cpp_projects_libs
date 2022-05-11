@@ -45,7 +45,7 @@ int main()
     // .map(torch::data::transforms::Stack<>());
     const size_t testDatasetSize = testDataset.size().value();
     DEB(testDatasetSize);
-    auto test_loader = torch::data::make_data_loader(std::move(testDataset), TestBatchSize);
+    auto testDataLoader = torch::data::make_data_loader(std::move(testDataset), TestBatchSize);
 
     auto model = std::make_shared<KeypointsModel>();
 
@@ -55,7 +55,7 @@ int main()
 
     for (size_t epoch = 1; epoch <= NumberOfEpochs; ++epoch) {
         // train(epoch, model, *trainDataLoader, optimizer, trainDatasetSize);
-        // test(model, *test_loader, testDatasetSize);
+        // test(model, *testDataLoader, testDatasetSize);
         //* train
         size_t batchIdx = 0;
         for (torch::data::Example<>& batch : *trainDataLoader) {
@@ -68,9 +68,20 @@ int main()
             optimizer.step();
 
             if (batchIdx++ % LogInterval == 0) {
-                std::printf("\rTrain Epoch: %ld [%5ld/%5ld] Loss: %.4f", epoch, batchIdx * batch.data.size(0),
+                std::printf("\rTrain Epoch: %ld [%5ld/%5ld] Loss: %.4f\n", epoch, batchIdx * batch.data.size(0),
                             trainDatasetSize, loss.template item<float>());
             }
+        }
+    }
+
+    //* test
+    for (torch::data::Example<>& batch : *trainDataLoader) {
+        // auto data = batch.data.to(device), targets = batch.target.to(device);
+
+        auto output = model->forward(batch.data);
+        for (int i = 0; i < batch.data.size(0); ++i) {
+            torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({512, 512, 3}),
+                                                                          output[i]);
         }
     }
 

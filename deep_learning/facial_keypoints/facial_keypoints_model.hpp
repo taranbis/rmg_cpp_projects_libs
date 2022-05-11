@@ -22,7 +22,7 @@ public:
     KeypointsModel()
     {
         conv1 = register_module("conv1",
-                                torch::nn::Sequential(torch::nn::Conv2d(3, 32, 5 /*kernel_size*/),
+                                torch::nn::Sequential(torch::nn::Conv2d(3, 16, 5 /*kernel_size*/),
                                                       torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
                                                       torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1)),
                                                       torch::nn::MaxPool2d(torch::nn::MaxPool2dOptions({2, 2})
@@ -34,7 +34,7 @@ public:
         //Output is: 
 
         conv2 = register_module("conv2",
-                                torch::nn::Sequential(torch::nn::Conv2d(32, 64, 4 /*kernel_size*/),
+                                torch::nn::Sequential(torch::nn::Conv2d(16, 32, 4 /*kernel_size*/),
                                                       torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
                                                       torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1)),
                                                       torch::nn::MaxPool2d(torch::nn::MaxPool2dOptions({2, 2})
@@ -45,7 +45,7 @@ public:
                                                                                        .ceil_mode(false))));
 
         conv3 = register_module("conv3",
-                                torch::nn::Sequential(torch::nn::Conv2d(64, 128, 3 /*kernel_size*/),
+                                torch::nn::Sequential(torch::nn::Conv2d(32, 64, 3 /*kernel_size*/),
                                                       torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
                                                       torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1)),
                                                       torch::nn::MaxPool2d(torch::nn::MaxPool2dOptions({2, 2})
@@ -59,7 +59,7 @@ public:
                     "conv4",
                     torch::nn::Sequential(
                                 torch::nn::Conv2d(
-                                            torch::nn::Conv2dOptions({128, 256, 2 /*kernel_size*/}).stride(1)),
+                                            torch::nn::Conv2dOptions({64, 64, 2 /*kernel_size*/}).stride(1)),
                                 torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
                                 torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1)),
                                 torch::nn::MaxPool2d(torch::nn::MaxPool2dOptions({2, 2})
@@ -70,10 +70,19 @@ public:
                                                                  .ceil_mode(false))));
 
         fc1 = register_module(
-                    "fc1", torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(230400, 512).bias(true)),
-                                                 torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
-                                                 torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1))));
-
+                    "fc1",
+                    torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(57600, 4096).bias(true)),
+                                          torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
+                                          torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1))));
+        fc2 = register_module(
+                    "fc2",
+                    torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(4096, 1024).bias(true)),
+                                          torch::nn::ELU(torch::nn::ELUOptions().inplace(true))));
+        fc3 = register_module(
+                    "fc3",
+                    torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(1024, 512).bias(true)),
+                                          torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
+                                          torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1))));
         last = register_module(
                     "last", torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(512, 136).bias(true)),
                                                   torch::nn::ELU(torch::nn::ELUOptions().inplace(true))));
@@ -82,23 +91,20 @@ public:
     // Implement the Net's algorithm.
     torch::Tensor forward(torch::Tensor x)
     {
-        DEB(x.scalar_type());
         x = x.to(torch::kFloat32);
-        DEB(x.scalar_type());
         x = conv1->forward(x);
-        DEB(x.sizes());
         x = conv2->forward(x);
-        DEB(x.sizes());
         x = conv3->forward(x);
-        DEB(x.sizes());
         x = conv4->forward(x);
-        DEB(x.sizes());
+        // DEB(x.sizes());
         x= x.view({x.size(0), -1 });
-        DEB(x.sizes());
+        // DEB(x.sizes());
         x = fc1->forward(x);
-        DEB(x.sizes());
+        x = fc2->forward(x);
+        x = fc3->forward(x);
+        // DEB(x.sizes());
         x = last->forward(x);
-        DEB(x.sizes());
+        // DEB(x.sizes());
         return x;
     }
 

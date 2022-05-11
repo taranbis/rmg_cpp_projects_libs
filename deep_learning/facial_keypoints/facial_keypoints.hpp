@@ -83,8 +83,8 @@ public:
 private:
     // const uint32_t TrainSize = 4500;
     // const uint32_t TestSize = 500;
-    const uint32_t TrainSize = 10;
-    const uint32_t TestSize = 2;
+    const uint32_t TrainSize = 100;
+    const uint32_t TestSize = 20;
 
     const uint32_t ImageRows = 512;
     const uint32_t ImageColumns = 512;
@@ -126,7 +126,6 @@ private:
         }
 
         DEB(rv.sizes());
-        DEB(rv.scalar_type());
         return rv;
     }
 
@@ -192,8 +191,6 @@ public:
     {
         int64_t height = tensor.size(0);
         int64_t width = tensor.size(1);
-        DEB(height);
-        DEB(width);
         cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3, tensor.data_ptr<uchar>());
         for (int i = 0; i < faceLandmarks.sizes()[0] / 2; ++i) {
             int x = faceLandmarks[2 * i].item<double>();
