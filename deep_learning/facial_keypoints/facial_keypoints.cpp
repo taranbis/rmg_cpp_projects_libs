@@ -2,7 +2,7 @@
 #include "facial_keypoints_model.hpp"
 
 /******************************************************************************************************************
- ** Facial Keypoints Detection
+ **                                Facial Keypoints Detection
  *
  * This project will be all about defining and training a convolutional neural network to perform facial keypoint
  * detection, and using computer vision techniques to transform images of faces.
@@ -11,10 +11,10 @@
 int main()
 {
     const char* DataRoot = "./facial_keypoints_dataset";
-    constexpr int TrainBatchSize = 64;
-    constexpr int TestBatchSize = 1000;
-    constexpr int64_t NumberOfEpochs = 10;
-    constexpr int64_t LogInterval = 10;
+    constexpr std::size_t TrainBatchSize = 64;
+    constexpr std::size_t TestBatchSize = 200;
+    constexpr std::size_t NumberOfEpochs = 30; //20 epochs seems to be best; also 30 seem good
+    constexpr std::size_t LogInterval = 10;
 
     // we apply the Stack collation, which takes a batch of tensors and stacks them into a single tensor along the
     // first dimension:
@@ -27,17 +27,17 @@ int main()
                 std::move(trainDataset),
                 torch::data::DataLoaderOptions().batch_size(TrainBatchSize).workers(2).enforce_ordering(false));
 
-    for (torch::data::Example<>& batch : *trainDataLoader) {
-        std::cout << "Batch size: " << batch.data.size(0) << " | Image: ";
-        for (int64_t i = 0; i < batch.data.size(0); ++i) {
-            if (i % 33 == 0) {
-                DEB(batch.data[i].scalar_type());
-                torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({512, 512, 3}),
-                                                                              batch.target[i]);
-            }
-        }
-        std::cout << std::endl;
-    }
+    // for (torch::data::Example<>& batch : *trainDataLoader) {
+    //     std::cout << "Batch size: " << batch.data.size(0) << " | Image: ";
+    //     for (int64_t i = 0; i < batch.data.size(0); ++i) {
+    //         if (i % 33 == 0) {
+    //             // DEB(batch.data[i].scalar_type());
+    //             torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({512, 512, 3}),
+    //                                                                           batch.target[i]);
+    //         }
+    //     }
+    //     std::cout << std::endl;
+    // }
 
     auto testDataset = torch::data::datasets::FaceLandmarksDataset(
                 DataRoot, torch::data::datasets::FaceLandmarksDataset::Mode::Test);
@@ -51,12 +51,15 @@ int main()
 
     // torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(0.01).momentum(0.5));
     // ptimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-6, nesterov=True
-    torch::optim::Adam optimizer(model->parameters(), /*lr*/ 0.001);
+    // torch::optim::Adam optimizer(model->parameters(), /*lr*/ 0.001);
+    // torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.001).weight_decay(1e-2));
+    // torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.0001).weight_decay(1e-5));
+    torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.05).weight_decay(1e-2));
 
+    // train(epoch, model, *trainDataLoader, optimizer, trainDatasetSize);
+    // test(model, *testDataLoader, testDatasetSize);
+    //******************** Training ******************************//
     for (size_t epoch = 1; epoch <= NumberOfEpochs; ++epoch) {
-        // train(epoch, model, *trainDataLoader, optimizer, trainDatasetSize);
-        // test(model, *testDataLoader, testDatasetSize);
-        //* train
         size_t batchIdx = 0;
         for (torch::data::Example<>& batch : *trainDataLoader) {
             // auto data = batch.data.to(device), targets = batch.target.to(device);
@@ -74,16 +77,21 @@ int main()
         }
     }
 
-    //* test
+    //******************** Testing ******************************//
     for (torch::data::Example<>& batch : *trainDataLoader) {
         // auto data = batch.data.to(device), targets = batch.target.to(device);
 
         auto output = model->forward(batch.data);
+        size_t idx = 0;
         for (int i = 0; i < batch.data.size(0); ++i) {
-            torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({512, 512, 3}),
-                                                                          output[i]);
+            if (idx++ % 50 == 0) {
+                torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({512, 512, 3}),
+                                                                              output[i]);
+            }
         }
     }
+
+    torch::save(model, "KeyPointsModel.pt");
 
     return 0;
 }

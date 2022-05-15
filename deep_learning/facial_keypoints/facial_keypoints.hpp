@@ -81,10 +81,10 @@ public:
     }
 
 private:
-    // const uint32_t TrainSize = 4500;
-    // const uint32_t TestSize = 500;
-    const uint32_t TrainSize = 100;
-    const uint32_t TestSize = 20;
+    const uint32_t TrainSize = 4800;
+    const uint32_t TestSize = 200;
+    // const uint32_t TrainSize = 1000;
+    // const uint32_t TestSize = 20;
 
     const uint32_t ImageRows = 512;
     const uint32_t ImageColumns = 512;
@@ -181,8 +181,8 @@ private:
         // tensor = tensor.toType(torch::kFloat).sub(127.5).mul(0.0078125);
         // auto newTensor = tensor.to(torch::kFloat32) /* .div_(255) */;
 
-        tensor = tensor.view({3,512,512});
-         return tensor;
+        tensor = tensor.view({3, 512, 512});
+        return tensor;
         // return tensor.flatten();
     };
 

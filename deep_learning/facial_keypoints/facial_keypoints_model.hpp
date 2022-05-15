@@ -21,108 +21,137 @@ class KeypointsModel : public torch::nn::Module
 public:
     KeypointsModel()
     {
-        conv1 = register_module("conv1",
-                                torch::nn::Sequential(torch::nn::Conv2d(3, 16, 5 /*kernel_size*/),
-                                                      torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
-                                                      torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1)),
-                                                      torch::nn::MaxPool2d(torch::nn::MaxPool2dOptions({2, 2})
-                                                                                       //    .kernel_size(2)
-                                                                                       //    .stride(2)
-                                                                                       .padding(0)
-                                                                                       .dilation(1)
-                                                                                       .ceil_mode(false))));
-        //Output is: 
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(3, 8, 3 /*kernel_size*/).stride(2)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(8)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
 
-        conv2 = register_module("conv2",
-                                torch::nn::Sequential(torch::nn::Conv2d(16, 32, 4 /*kernel_size*/),
-                                                      torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
-                                                      torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1)),
-                                                      torch::nn::MaxPool2d(torch::nn::MaxPool2dOptions({2, 2})
-                                                                                       //    .kernel_size(2)
-                                                                                       //    .stride(2)
-                                                                                       .padding(0)
-                                                                                       .dilation(1)
-                                                                                       .ceil_mode(false))));
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(8, 16, 3 /*kernel_size*/).stride(2)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(16)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
 
-        conv3 = register_module("conv3",
-                                torch::nn::Sequential(torch::nn::Conv2d(32, 64, 3 /*kernel_size*/),
-                                                      torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
-                                                      torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1)),
-                                                      torch::nn::MaxPool2d(torch::nn::MaxPool2dOptions({2, 2})
-                                                                                       //    .kernel_size(2)
-                                                                                       //    .stride(2)
-                                                                                       .padding(0)
-                                                                                       .dilation(1)
-                                                                                       .ceil_mode(false))));
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(16, 16, 3 /*kernel_size*/).stride(1)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(16)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
 
-        conv4 = register_module(
-                    "conv4",
-                    torch::nn::Sequential(
-                                torch::nn::Conv2d(
-                                            torch::nn::Conv2dOptions({64, 64, 2 /*kernel_size*/}).stride(1)),
-                                torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
-                                torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1)),
-                                torch::nn::MaxPool2d(torch::nn::MaxPool2dOptions({2, 2})
-                                                                 //    .kernel_size(2)
-                                                                 //    .stride(2)
-                                                                 .padding(0)
-                                                                 .dilation(1)
-                                                                 .ceil_mode(false))));
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(16, 32, 3 /*kernel_size*/).stride(2)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(32)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
 
-        fc1 = register_module(
-                    "fc1",
-                    torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(57600, 4096).bias(true)),
-                                          torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
-                                          torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1))));
-        fc2 = register_module(
-                    "fc2",
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(32, 32, 3 /*kernel_size*/).stride(1)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(32)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
+
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(32, 64, 3 /*kernel_size*/).stride(2)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(64)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
+
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(64, 64, 3 /*kernel_size*/).stride(1)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(64)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
+
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(64, 128, 3 /*kernel_size*/).stride(2)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(128)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
+
+        convLayers_.push_back(torch::nn::Sequential(
+                    torch::nn::Conv2d(torch::nn::Conv2dOptions(128, 128, 3 /*kernel_size*/).stride(1)),
+                    torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(128)
+                                                       .eps(1e-5)
+                                                       .momentum(0.1)
+                                                       .affine(true)
+                                                       .track_running_stats(true)),
+                    torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
+
+        fcLayers_.push_back(
+                    torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(15488, 4096).bias(true)),
+                                          torch::nn::BatchNorm1d(torch::nn::BatchNorm1dOptions(4096)
+                                                                             .eps(1e-5)
+                                                                             .momentum(0.1)
+                                                                             .affine(true)
+                                                                             .track_running_stats(true)),
+                                          torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
+        fcLayers_.push_back(
                     torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(4096, 1024).bias(true)),
-                                          torch::nn::ELU(torch::nn::ELUOptions().inplace(true))));
-        fc3 = register_module(
-                    "fc3",
+                                          torch::nn::BatchNorm1d(torch::nn::BatchNorm1dOptions(1024)
+                                                                             .eps(1e-5)
+                                                                             .momentum(0.1)
+                                                                             .affine(true)
+                                                                             .track_running_stats(true)),
+                                          torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
+        fcLayers_.push_back(
                     torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(1024, 512).bias(true)),
-                                          torch::nn::ELU(torch::nn::ELUOptions().inplace(true)),
-                                          torch::nn::Dropout(torch::nn::DropoutOptions().p(0.1))));
+                                          torch::nn::BatchNorm1d(torch::nn::BatchNorm1dOptions(512)
+                                                                             .eps(1e-5)
+                                                                             .momentum(0.1)
+                                                                             .affine(true)
+                                                                             .track_running_stats(true)),
+                                          torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
         last = register_module(
                     "last", torch::nn::Sequential(torch::nn::Linear(torch::nn::LinearOptions(512, 136).bias(true)),
-                                                  torch::nn::ELU(torch::nn::ELUOptions().inplace(true))));
+                                                  torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true))));
     }
 
     // Implement the Net's algorithm.
     torch::Tensor forward(torch::Tensor x)
     {
         x = x.to(torch::kFloat32);
-        x = conv1->forward(x);
-        x = conv2->forward(x);
-        x = conv3->forward(x);
-        x = conv4->forward(x);
+        for (auto& layer : convLayers_) x = layer->forward(x);
+        x = x.view({x.size(0), -1});
         // DEB(x.sizes());
-        x= x.view({x.size(0), -1 });
-        // DEB(x.sizes());
-        x = fc1->forward(x);
-        x = fc2->forward(x);
-        x = fc3->forward(x);
+        for (auto& layer : fcLayers_) x = layer->forward(x);
         // DEB(x.sizes());
         x = last->forward(x);
         // DEB(x.sizes());
         return x;
     }
 
-    // torch::nn::Linear fc1{nullptr}, fc2{nullptr}, fc3{nullptr};
-
-    torch::nn::Sequential conv1{nullptr};
-    torch::nn::Sequential conv2{nullptr};
-    torch::nn::Sequential conv3{nullptr};
-    torch::nn::Sequential conv4{nullptr};
-
-    torch::nn::Sequential fc1{nullptr};
-    torch::nn::Sequential fc2{nullptr};
-    torch::nn::Sequential fc3{nullptr};
+    std::vector<torch::nn::Sequential> convLayers_{};
+    std::vector<torch::nn::Sequential> fcLayers_{};
 
     torch::nn::Sequential last{nullptr};
 
     // torch::nn::Conv2d conv{nullptr};
-    // torch::nn::ELU elu{nullptr};
+    // torch::nn::ReLU elu{nullptr};
 };
 
 class KeypointsModelTest : public torch::nn::Module
@@ -131,7 +160,7 @@ public:
     KeypointsModelTest()
     {
         conv = register_module("conv", torch::nn::Conv2d(3, 32, 5 /*kernel_size*/));
-        elu = register_module("elu", torch::nn::ELU(torch::nn::ELUOptions().inplace(true)));
+        elu = register_module("elu", torch::nn::ReLU(torch::nn::ReLUOptions().inplace(true)));
     }
 
     torch::Tensor forward(torch::Tensor x)
@@ -145,7 +174,7 @@ public:
     }
 
     torch::nn::Conv2d conv{nullptr};
-    torch::nn::ELU elu{nullptr};
+    torch::nn::ReLU elu{nullptr};
 };
 
 #endif
