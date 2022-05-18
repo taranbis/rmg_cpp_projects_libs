@@ -1,6 +1,12 @@
 #include "facial_keypoints.hpp"
 #include "facial_keypoints_model.hpp"
 
+#include <boost/program_options.hpp>
+
+#include <random>
+
+namespace po = boost::program_options;
+
 /******************************************************************************************************************
  **                                Facial Keypoints Detection
  *
@@ -8,90 +14,210 @@
  * detection, and using computer vision techniques to transform images of faces.
  *****************************************************************************************************************/
 
-int main()
+template <typename DataLoader>
+void train(size_t numberOfEpochs, KeypointsModel& model, DataLoader& dataLoader,
+           torch::optim::Optimizer& optimizer, size_t datasetSize, size_t logInterval)
 {
-    const char* DataRoot = "./facial_keypoints_dataset";
-    constexpr std::size_t TrainBatchSize = 64;
-    constexpr std::size_t TestBatchSize = 200;
-    constexpr std::size_t NumberOfEpochs = 30; //20 epochs seems to be best; also 30 seem good
-    constexpr std::size_t LogInterval = 10;
-
-    // we apply the Stack collation, which takes a batch of tensors and stacks them into a single tensor along the
-    // first dimension:
-    auto trainDataset = torch::data::datasets::FaceLandmarksDataset("./facial_keypoints_dataset")
-                                    .map(torch::data::transforms::Stack<>());
-
-    const size_t trainDatasetSize = trainDataset.size().value();
-    DEB(trainDatasetSize);
-    auto trainDataLoader = torch::data::make_data_loader(
-                std::move(trainDataset),
-                torch::data::DataLoaderOptions().batch_size(TrainBatchSize).workers(2).enforce_ordering(false));
-
-    // for (torch::data::Example<>& batch : *trainDataLoader) {
-    //     std::cout << "Batch size: " << batch.data.size(0) << " | Image: ";
-    //     for (int64_t i = 0; i < batch.data.size(0); ++i) {
-    //         if (i % 33 == 0) {
-    //             // DEB(batch.data[i].scalar_type());
-    //             torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({512, 512, 3}),
-    //                                                                           batch.target[i]);
-    //         }
-    //     }
-    //     std::cout << std::endl;
-    // }
-
-    auto testDataset = torch::data::datasets::FaceLandmarksDataset(
-                DataRoot, torch::data::datasets::FaceLandmarksDataset::Mode::Test);
-    // .map(torch::data::transforms::Normalize<>(0.1307, 0.3081))
-    // .map(torch::data::transforms::Stack<>());
-    const size_t testDatasetSize = testDataset.size().value();
-    DEB(testDatasetSize);
-    auto testDataLoader = torch::data::make_data_loader(std::move(testDataset), TestBatchSize);
-
-    auto model = std::make_shared<KeypointsModel>();
-
-    // torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(0.01).momentum(0.5));
-    // ptimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-6, nesterov=True
-    // torch::optim::Adam optimizer(model->parameters(), /*lr*/ 0.001);
-    // torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.001).weight_decay(1e-2));
-    // torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.0001).weight_decay(1e-5));
-    torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.05).weight_decay(1e-2));
-
-    // train(epoch, model, *trainDataLoader, optimizer, trainDatasetSize);
-    // test(model, *testDataLoader, testDatasetSize);
-    //******************** Training ******************************//
-    for (size_t epoch = 1; epoch <= NumberOfEpochs; ++epoch) {
+    for (size_t epoch = 1; epoch <= numberOfEpochs; ++epoch) {
         size_t batchIdx = 0;
-        for (torch::data::Example<>& batch : *trainDataLoader) {
+        for (const torch::data::Example<>& batch : *dataLoader) {
             // auto data = batch.data.to(device), targets = batch.target.to(device);
             optimizer.zero_grad();
-            auto output = model->forward(batch.data);
+            auto output = model.forward(batch.data);
             auto loss = torch::mse_loss(output, batch.target);
             AT_ASSERT(!std::isnan(loss.template item<float>()));
             loss.backward();
             optimizer.step();
 
-            if (batchIdx++ % LogInterval == 0) {
+            if (batchIdx++ % logInterval == 0) {
                 std::printf("\rTrain Epoch: %ld [%5ld/%5ld] Loss: %.4f\n", epoch, batchIdx * batch.data.size(0),
-                            trainDatasetSize, loss.template item<float>());
+                            datasetSize, loss.template item<float>());
             }
         }
     }
+}
 
-    //******************** Testing ******************************//
-    for (torch::data::Example<>& batch : *trainDataLoader) {
+template <typename DataLoader>
+auto test(KeypointsModel& model, DataLoader& dataLoader, size_t datasetSize)
+{
+    auto testLoss = 0.;
+    for (const torch::data::Example<>& batch : *dataLoader) {
         // auto data = batch.data.to(device), targets = batch.target.to(device);
-
-        auto output = model->forward(batch.data);
-        size_t idx = 0;
-        for (int i = 0; i < batch.data.size(0); ++i) {
-            if (idx++ % 50 == 0) {
-                torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({512, 512, 3}),
-                                                                              output[i]);
-            }
-        }
+        auto output = model.forward(batch.data);
+        auto loss = torch::mse_loss(output, batch.target); //
+        AT_ASSERT(!std::isnan(loss.template item<float>()));
+        testLoss += loss.template item<float>();
     }
 
-    torch::save(model, "KeyPointsModel.pt");
+    testLoss /= datasetSize;
+    std::printf("\nTest set: Average loss: %.4f", testLoss);
 
+    return testLoss;
+}
+
+int main(int argc, char** argv)
+{
+    po::options_description desc("Program options");
+
+    desc.add_options()("help, h", "print info")("tune", "parameter tuning")("train, t", "train model")(
+                "results, r", "show results")("display, d", "display initial images");
+
+    po::variables_map vm;
+    auto parsed = po::parse_command_line(argc, argv, desc);
+    po::store(parsed, vm);
+    po::notify(vm);
+
+    if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 1;
+    }
+
+    const char* DataRoot = "./facial_keypoints_dataset";
+    constexpr std::size_t NumberOfEpochs = 30; // 20 epochs seems to be best; also 30 seem good
+    constexpr std::size_t LogInterval = 10;
+    constexpr std::size_t TrainDatasetSize = 1000;
+    constexpr std::size_t TestDatasetSize = 1000;
+
+    //************Hyperparameter Tuning **************************//
+    if (vm.count("tune")) {
+        std::cout << "Hyperparameter tuning: finding best learning rate" << std::endl;
+        std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_real_distribution dist(0.1, 0.0001);
+
+        // auto learningRates = rmg::linspace(0.1, 0.0001, 50);
+        std::vector<double> learningRates;
+        for (int i = 0; i < 50; ++i) learningRates.push_back(dist(mt));
+        assert(learningRates.size() == 50);
+
+        double bestLearningRate = 0;
+        double smallestLoss = {INFINITY};
+        const auto hypertuningFn = [&](double learningRate, size_t batchSize) {
+            // Recreate the model every time
+            auto model = std::make_shared<KeypointsModel>();
+
+            auto localTrainDataset =
+                        torch::data::datasets::FaceLandmarksDataset(
+                                    "./facial_keypoints_dataset",
+                                    torch::data::datasets::FaceLandmarksDataset::Mode::Train, 1000, 40)
+                                    .map(torch::data::transforms::Stack<>());
+
+            const size_t LocalTrainDatasetSize = localTrainDataset.size().value();
+            DEB(LocalTrainDatasetSize);
+
+            auto localLoader = torch::data::make_data_loader(
+                        std::move(localTrainDataset),
+                        torch::data::DataLoaderOptions().batch_size(batchSize).workers(2).enforce_ordering(false));
+
+            torch::optim::AdamW localOptimizer(model->parameters(),
+                                               torch::optim::AdamWOptions().lr(learningRate).weight_decay(1e-2));
+            train(NumberOfEpochs, *model, localLoader, localOptimizer, LocalTrainDatasetSize, LogInterval);
+
+            auto localTestDataset = torch::data::datasets::FaceLandmarksDataset(
+                                                "./facial_keypoints_dataset",
+                                                torch::data::datasets::FaceLandmarksDataset::Mode::Test, 1000, 40)
+                                                .map(torch::data::transforms::Stack<>());
+
+            const size_t LocalTestDatasetSize = localTestDataset.size().value();
+            DEB(LocalTestDatasetSize);
+
+            auto testDataLoader = torch::data::make_data_loader(std::move(localTestDataset), batchSize);
+
+            auto loss = test(*model, testDataLoader, LocalTestDatasetSize);
+
+            if (loss < smallestLoss) {
+                smallestLoss = loss;
+
+                bestLearningRate = learningRate;
+            }
+
+            return bestLearningRate;
+        };
+        rmg::PrintVector(learningRates);
+        for (const auto& lr : learningRates) {
+            std::printf("Trying learning rate: %.4f\n", lr);
+            hypertuningFn(lr, 64);
+        }
+        std::printf("Best learning rate found: %.4f\n", bestLearningRate);
+    }
+
+    //******************** Train Model ******************************//
+    if (vm.count("train")) {
+        std::cout << "Model training started" << std::endl;
+
+        constexpr std::size_t TrainBatchSize = 64;
+        constexpr std::size_t TestBatchSize = 200;
+
+        // we apply the Stack collation, which takes a batch of tensors and stacks them into a single tensor along
+        // the first dimension:
+        auto trainDataset = torch::data::datasets::FaceLandmarksDataset(
+                                        DataRoot, torch::data::datasets::FaceLandmarksDataset::Mode::Train,
+                                        TrainDatasetSize, TestDatasetSize)
+                                        .map(torch::data::transforms::Stack<>());
+
+        const size_t trainDatasetSize = trainDataset.size().value();
+        DEB(trainDatasetSize);
+        auto trainDataLoader =
+                    torch::data::make_data_loader(std::move(trainDataset), torch::data::DataLoaderOptions()
+                                                                                       .batch_size(TrainBatchSize)
+                                                                                       .workers(2)
+                                                                                       .enforce_ordering(false));
+
+        using FaceLandmarksDataset = torch::data::datasets::FaceLandmarksDataset;
+        // for (torch::data::Example<>& batch : *trainDataLoader) {
+        //     std::cout << "Batch size: " << batch.data.size(0) << " | Image: ";
+        //     for (int64_t i = 0; i < batch.data.size(0); ++i) {
+        //         if (i % 33 == 0) {
+        //             // DEB(batch.data[i].scalar_type());
+        //             torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({FaceLandmarksDataset::ImageRows,
+        //             FaceLandmarksDataset::ImageColumns, FaceLandmarksDataset::ImageChannels}),
+        //                                                                           batch.target[i]);
+        //         }
+        //     }
+        //     std::cout << std::endl;
+        // }
+
+        auto testDataset = torch::data::datasets::FaceLandmarksDataset(
+                                       DataRoot, torch::data::datasets::FaceLandmarksDataset::Mode::Test,
+                                       TrainDatasetSize, TestDatasetSize)
+                                       .map(torch::data::transforms::Stack<>());
+        // .map(torch::data::transforms::Normalize<>(0.1307, 0.3081))
+
+        const size_t testDatasetSize = testDataset.size().value();
+        DEB(testDatasetSize);
+        auto testDataLoader = torch::data::make_data_loader(std::move(testDataset), TestBatchSize);
+
+        // torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(0.01).momentum(0.5));
+        // ptimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-6, nesterov=True
+        // torch::optim::Adam optimizer(model->parameters(), /*lr*/ 0.001);
+        // torch::optim::AdamWOptions().lr(0.001).weight_decay(1e-2)); torch::optim::AdamW
+        // optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.0001).weight_decay(1e-5));
+
+        auto model = std::make_shared<KeypointsModel>();
+
+        torch::optim::AdamW optimizer(model->parameters(),
+                                      torch::optim::AdamWOptions().lr(0.05).weight_decay(1e-2));
+
+        train(NumberOfEpochs, *model, trainDataLoader, optimizer, trainDatasetSize, LogInterval);
+
+        //******************** Display Results / Test Performance ******************************//
+        for (torch::data::Example<>& batch : *testDataLoader) {
+            // auto data = batch.data.to(device), targets = batch.target.to(device);
+
+            auto output = model->forward(batch.data);
+            size_t idx = 0;
+            for (int i = 0; i < batch.data.size(0); ++i) {
+                if (idx++ % 50 == 0) {
+                    torch::data::datasets::FaceLandmarksDataset::displayKeyPoints(
+                                batch.data[i].view({FaceLandmarksDataset::ImageRows,
+                                                    FaceLandmarksDataset::ImageColumns,
+                                                    FaceLandmarksDataset::ImageChannels}),
+                                output[i]);
+                }
+            }
+        }
+
+        torch::save(model, "KeyPointsModel.pt");
+    }
     return 0;
 }

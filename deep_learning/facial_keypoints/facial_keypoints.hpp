@@ -45,8 +45,10 @@ public:
     enum class Mode { Train, Test };
 
     /// Loads the  dataset from the `root` path.
-    explicit FaceLandmarksDataset(const std::string& root, Mode mode = Mode::Train)
-            : images_(readImages(root, mode == Mode::Train)), keyPoints_(readTargets(root, mode == Mode::Train))
+    explicit FaceLandmarksDataset(const std::string& root, Mode mode = Mode::Train, size_t trainSize = 4800,
+                                  size_t testSize = 200)
+            : images_(readImages(root, mode == Mode::Train)), keyPoints_(readTargets(root, mode == Mode::Train)),
+              TrainSize(trainSize), TestSize(testSize)
     {
     }
 
@@ -81,14 +83,16 @@ public:
     }
 
 private:
-    const uint32_t TrainSize = 4800;
-    const uint32_t TestSize = 200;
-    // const uint32_t TrainSize = 1000;
-    // const uint32_t TestSize = 20;
+    // const uint32_t TrainSize = 4800;
+    // const uint32_t TestSize = 200;
+    const uint32_t TrainSize = 1000;
+    const uint32_t TestSize = 20;
 
-    const uint32_t ImageRows = 512;
-    const uint32_t ImageColumns = 512;
-    const uint32_t ImageChannels = 3;
+public:
+    static constexpr uint32_t ImageRows = 512;
+    static constexpr uint32_t ImageColumns = 512;
+    // const uint32_t ImageChannels = 3;
+    static constexpr uint32_t ImageChannels = 1;
 
     Tensor images_;
     Tensor keyPoints_;
@@ -162,7 +166,7 @@ private:
             }
         }
 
-        // for (int j = 0; j < count; ++j) displayKeyPointsTorch(images[j].view({512, 512, 3}), rv[j]);
+        // for (int j = 0; j < count; ++j) displayKeyPointsTorch(images[j].view({FaceLandmarksDataset::ImageRows, FaceLandmarksDataset::ImageColumns, FaceLandmarksDataset::ImageChannels}), rv[j]);
 
         DEB(rv.sizes());
         return rv;
@@ -170,7 +174,11 @@ private:
 
     Tensor getImgData(const std::string& path)
     {
-        cv::Mat img = rmg::readImg(path);
+        // cv::Mat img = rmg::readImg(path);
+        const std::string imagePath = cv::samples::findFile(path);
+        cv::Mat img = cv::imread(imagePath, cv::IMREAD_GRAYSCALE); // CV_8UC1
+        if (img.empty()) std::cerr << "Could not read the image: " << imagePath << std::endl;
+
         assert(img.rows == ImageRows);
         assert(img.cols == ImageColumns);
         assert(img.channels() == ImageChannels);
@@ -179,9 +187,9 @@ private:
         Tensor tensor = rmg::cvMatToTorchTensor(img);
         // tensor.unsqueeze_(0);
         // tensor = tensor.toType(torch::kFloat).sub(127.5).mul(0.0078125);
-        // auto newTensor = tensor.to(torch::kFloat32) /* .div_(255) */;
+        tensor = tensor.to(torch::kFloat32) /* .div_(255) */;
 
-        tensor = tensor.view({3, 512, 512});
+        tensor = tensor.view({ImageChannels, ImageRows, ImageColumns});
         return tensor;
         // return tensor.flatten();
     };
@@ -189,9 +197,10 @@ private:
 public:
     static void displayKeyPoints(Tensor tensor, Tensor faceLandmarks)
     {
+        //TODO: slect type (CV_8UC1) based on the channels given here
         int64_t height = tensor.size(0);
         int64_t width = tensor.size(1);
-        cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3, tensor.data_ptr<uchar>());
+        cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC1, tensor.data_ptr<uchar>());
         for (int i = 0; i < faceLandmarks.sizes()[0] / 2; ++i) {
             int x = faceLandmarks[2 * i].item<double>();
             int y = faceLandmarks[2 * i + 1].item<double>();

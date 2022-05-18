@@ -11,7 +11,8 @@ find_package(MxNet REQUIRED)
 
 find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)
-
+find_package(Boost 1.74 COMPONENTS program_options REQUIRED)
+ 
 # CMakeLists.txt
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../Modules/")
 
@@ -32,3 +33,7 @@ target_link_libraries(facial_keypoints PRIVATE ${OpenCV_LIBS})
 target_link_libraries(facial_keypoints PRIVATE nlohmann_json::nlohmann_json)
 target_include_directories(facial_keypoints PUBLIC "../include" "../../util/csv" ${EIGEN3_INCLUDE_DIR} "../../util/include")
 target_include_directories(facial_keypoints PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../libraries/libtorch/include/torch/csrc/api/include)
+if (Boost_FOUND)
+	include_directories(${Boost_INCLUDE_DIRS})
+	target_link_libraries(facial_keypoints PUBLIC ${Boost_LIBRARIES})
+endif ()
