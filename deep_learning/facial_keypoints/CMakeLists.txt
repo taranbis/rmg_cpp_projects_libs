@@ -11,7 +11,7 @@ find_package(MxNet REQUIRED)
 
 find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(Boost 1.74 COMPONENTS program_options REQUIRED)
+find_package(Boost 1.74.0 COMPONENTS program_options REQUIRED)
  
 # CMakeLists.txt
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../Modules/")

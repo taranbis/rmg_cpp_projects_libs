@@ -152,13 +152,11 @@ public:
         return x;
     }
 
+private:
     std::vector<torch::nn::Sequential> convLayers_{};
     std::vector<torch::nn::Sequential> fcLayers_{};
 
     torch::nn::Sequential last{nullptr};
-
-    // torch::nn::Conv2d conv{nullptr};
-    // torch::nn::ReLU elu{nullptr};
 };
 
 class KeypointsModelTest : public torch::nn::Module

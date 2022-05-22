@@ -3,6 +3,8 @@
 
 #include <boost/program_options.hpp>
 
+#include <torch/script.h>
+
 #include <random>
 
 namespace po = boost::program_options;
@@ -50,7 +52,7 @@ auto test(KeypointsModel& model, DataLoader& dataLoader, size_t datasetSize)
     }
 
     testLoss /= datasetSize;
-    std::printf("\nTest set: Average loss: %.4f", testLoss);
+    std::printf("Test set: Average loss: %.4f\n", testLoss);
 
     return testLoss;
 }
@@ -60,11 +62,11 @@ int main(int argc, char** argv)
     po::options_description desc("Program options");
 
     desc.add_options()("help, h", "print info")("tune", "parameter tuning")("train, t", "train model")(
-                "results, r", "show results")("display, d", "display initial images");
+                "results, r", "show results")("display, d", "display initial images")(
+                "learning-rate, lr", "learning rate")("load", po::value<std::string>(), "load model");
 
     po::variables_map vm;
-    auto parsed = po::parse_command_line(argc, argv, desc);
-    po::store(parsed, vm);
+    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
     po::notify(vm);
 
     if (vm.count("help")) {
@@ -73,10 +75,10 @@ int main(int argc, char** argv)
     }
 
     const char* DataRoot = "./facial_keypoints_dataset";
-    constexpr std::size_t NumberOfEpochs = 30; // 20 epochs seems to be best; also 30 seem good
+    constexpr std::size_t NumberOfEpochs = 10; // 20 epochs seems to be best; also 30 seem good
     constexpr std::size_t LogInterval = 10;
-    constexpr std::size_t TrainDatasetSize = 1000;
-    constexpr std::size_t TestDatasetSize = 1000;
+    constexpr std::size_t TrainDatasetSize = 200;
+    constexpr std::size_t TestDatasetSize = 200;
 
     //************Hyperparameter Tuning **************************//
     if (vm.count("tune")) {
@@ -131,6 +133,8 @@ int main(int argc, char** argv)
                 bestLearningRate = learningRate;
             }
 
+            std::printf("Current learning rate: %.4f; Best learning rate: %.4f\n", learningRate, bestLearningRate);
+
             return bestLearningRate;
         };
         rmg::PrintVector(learningRates);
@@ -141,12 +145,13 @@ int main(int argc, char** argv)
         std::printf("Best learning rate found: %.4f\n", bestLearningRate);
     }
 
+
+    constexpr std::size_t TrainBatchSize = 64;
+    constexpr std::size_t TestBatchSize = 200;
+    using FaceLandmarksDataset = torch::data::datasets::FaceLandmarksDataset;
     //******************** Train Model ******************************//
     if (vm.count("train")) {
         std::cout << "Model training started" << std::endl;
-
-        constexpr std::size_t TrainBatchSize = 64;
-        constexpr std::size_t TestBatchSize = 200;
 
         // we apply the Stack collation, which takes a batch of tensors and stacks them into a single tensor along
         // the first dimension:
@@ -163,7 +168,6 @@ int main(int argc, char** argv)
                                                                                        .workers(2)
                                                                                        .enforce_ordering(false));
 
-        using FaceLandmarksDataset = torch::data::datasets::FaceLandmarksDataset;
         // for (torch::data::Example<>& batch : *trainDataLoader) {
         //     std::cout << "Batch size: " << batch.data.size(0) << " | Image: ";
         //     for (int64_t i = 0; i < batch.data.size(0); ++i) {
@@ -193,18 +197,19 @@ int main(int argc, char** argv)
         // torch::optim::AdamWOptions().lr(0.001).weight_decay(1e-2)); torch::optim::AdamW
         // optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.0001).weight_decay(1e-5));
 
-        auto model = std::make_shared<KeypointsModel>();
+        // auto model = KeypointsModel();
+        KeypointsModel model;
 
-        torch::optim::AdamW optimizer(model->parameters(),
-                                      torch::optim::AdamWOptions().lr(0.05).weight_decay(1e-2));
+        // torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.05).weight_decay(1e-2));
+        torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions().lr(0.0642).weight_decay(1e-2));
 
-        train(NumberOfEpochs, *model, trainDataLoader, optimizer, trainDatasetSize, LogInterval);
+        train(NumberOfEpochs, model, trainDataLoader, optimizer, trainDatasetSize, LogInterval);
 
         //******************** Display Results / Test Performance ******************************//
         for (torch::data::Example<>& batch : *testDataLoader) {
             // auto data = batch.data.to(device), targets = batch.target.to(device);
 
-            auto output = model->forward(batch.data);
+            auto output = model.forward(batch.data);
             size_t idx = 0;
             for (int i = 0; i < batch.data.size(0); ++i) {
                 if (idx++ % 50 == 0) {
@@ -217,7 +222,55 @@ int main(int argc, char** argv)
             }
         }
 
-        torch::save(model, "KeyPointsModel.pt");
+        // torch::save(model, "KeyPointsModel.pt");
+        std::string modelPath = "KeyPointsModel.pt";
+        torch::serialize::OutputArchive outputArchive;
+        model.save(outputArchive);
+        outputArchive.save_to(modelPath);
+    }
+
+    if (vm.count("load")) {
+        std::cout << "Loading module: " << vm["load"].as<std::string>() << std::endl;
+        // torch::jit::script::Module module;
+        // try {
+        //     // Deserialize the ScriptModule from a file using torch::jit::load().
+        //     module = torch::jit::load(vm["load"].as<std::string>());
+        // } catch (const c10::Error& e) {
+        //     std::cerr << "error loading the model\n";
+        //     return -1;
+        // }
+        auto module = torch::jit::load(vm["load"].as<std::string>());
+//   assert(module != nullptr);
+        module.eval();
+
+        auto testDataset = torch::data::datasets::FaceLandmarksDataset(
+                                       DataRoot, torch::data::datasets::FaceLandmarksDataset::Mode::Test,
+                                       TrainDatasetSize, TestDatasetSize)
+                                       .map(torch::data::transforms::Stack<>());
+
+        const size_t testDatasetSize = testDataset.size().value();
+        DEB(testDatasetSize);
+        auto testDataLoader = torch::data::make_data_loader(std::move(testDataset), TestBatchSize);
+
+        //******************** Display Results / Test Performance ******************************//
+        for (torch::data::Example<>& batch : *testDataLoader) {
+            // auto data = batch.data.to(device), targets = batch.target.to(device);
+            // std::vector<torch::jit::IValue> inputs;
+            // inputs.push_back(batch.data);
+
+            auto output = module.forward({batch.data}).toTensor();
+            // torch::jit::Stack output = model.forward({batch.data}).toTuple()->elements();
+            size_t idx = 0;
+            for (int i = 0; i < batch.data.size(0); ++i) {
+                if (idx++ % 50 == 0) {
+                    FaceLandmarksDataset::displayKeyPoints(
+                                batch.data[i].view({FaceLandmarksDataset::ImageRows,
+                                                    FaceLandmarksDataset::ImageColumns,
+                                                    FaceLandmarksDataset::ImageChannels}),
+                                output[i]);
+                }
+            }
+        }
     }
     return 0;
 }

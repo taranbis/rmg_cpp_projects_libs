@@ -38,7 +38,7 @@ void printType(const cv::Mat& mat)
 cv::Mat readImg(const std::string& path)
 {
     const std::string imagePath = cv::samples::findFile(path);
-    const cv::Mat img = cv::imread(imagePath); // CV_8UC1
+    const cv::Mat img = cv::imread(imagePath); // CV_8UC3
     if (img.empty()) std::cerr << "Could not read the image: " << imagePath << std::endl;
 
     return img;

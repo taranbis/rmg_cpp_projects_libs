@@ -187,7 +187,7 @@ private:
         Tensor tensor = rmg::cvMatToTorchTensor(img);
         // tensor.unsqueeze_(0);
         // tensor = tensor.toType(torch::kFloat).sub(127.5).mul(0.0078125);
-        tensor = tensor.to(torch::kFloat32) /* .div_(255) */;
+        tensor = tensor.to(torch::kFloat32).div_(255);
 
         tensor = tensor.view({ImageChannels, ImageRows, ImageColumns});
         return tensor;
@@ -197,6 +197,7 @@ private:
 public:
     static void displayKeyPoints(Tensor tensor, Tensor faceLandmarks)
     {
+        tensor = tensor.mul_(255);
         //TODO: slect type (CV_8UC1) based on the channels given here
         int64_t height = tensor.size(0);
         int64_t width = tensor.size(1);
