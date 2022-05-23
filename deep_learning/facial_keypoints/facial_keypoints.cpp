@@ -221,9 +221,10 @@ int main(int argc, char** argv)
                 }
             }
         }
-
+        //!NOT WORKING!!!
         // torch::save(model, "KeyPointsModel.pt");
-        std::string modelPath = "KeyPointsModel.pt";
+
+        const std::string modelPath = "KeyPointsModel.pt";
         torch::serialize::OutputArchive outputArchive;
         model.save(outputArchive);
         outputArchive.save_to(modelPath);
@@ -239,9 +240,13 @@ int main(int argc, char** argv)
         //     std::cerr << "error loading the model\n";
         //     return -1;
         // }
-        auto module = torch::jit::load(vm["load"].as<std::string>());
-//   assert(module != nullptr);
-        module.eval();
+        // auto module = torch::jit::load(vm["load"].as<std::string>());
+        KeypointsModel model;
+        std::ifstream file(vm["load"].as<std::string>());
+        torch::serialize::InputArchive inputArchive;
+        inputArchive.load_from(file);
+        model.load(inputArchive);
+        model.eval();
 
         auto testDataset = torch::data::datasets::FaceLandmarksDataset(
                                        DataRoot, torch::data::datasets::FaceLandmarksDataset::Mode::Test,
@@ -258,7 +263,7 @@ int main(int argc, char** argv)
             // std::vector<torch::jit::IValue> inputs;
             // inputs.push_back(batch.data);
 
-            auto output = module.forward({batch.data}).toTensor();
+            auto output = model.forward({batch.data});
             // torch::jit::Stack output = model.forward({batch.data}).toTuple()->elements();
             size_t idx = 0;
             for (int i = 0; i < batch.data.size(0); ++i) {
