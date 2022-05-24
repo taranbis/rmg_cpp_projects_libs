@@ -22,11 +22,16 @@
 #include <type_traits>
 #include <concepts>
 
+
+/********************************************************************************
+ **         Header file that defines all sorts of useful functions
+ *******************************************************************************/
+
 // Extracts the first argument out of a list of any number of arguments
 #define ARG_1(a, ...) a
 
-/********************************************************************************
- *                              Helpful macros
+/*********************************************************************************
+ **                              Helpful macros
  *******************************************************************************/
 
 #ifndef personal_OS
@@ -149,10 +154,6 @@ typedef unsigned int uintptr_t;
 #define _UA_END_DECLS
 #endif
 #endif
-
-/********************************************************************************
- *         Header file that defines all sorts of useful functions
- *******************************************************************************/
 
 #define ALL(x) x.begin(), x.end()
 #define SORTALL(x) sort(ALL(x))
@@ -342,6 +343,21 @@ inline double computeSquareRoot(NumericType n)
         }
     }
     return mid;
+}
+
+template <typename NumericType, std::enable_if_t<std::is_arithmetic_v<NumericType>, bool> = true>
+inline double computeSqrt(NumericType value)
+{
+    constexpr NumericType e = 0.001;
+
+    NumericType a = value;
+    NumericType b = 1.0;
+
+    while (a - b > e) {
+        a = (a + b) / 2.0;
+        b = value / a;
+    }
+    return a;
 }
 
 /**

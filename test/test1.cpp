@@ -2,26 +2,33 @@
 #include <concepts>
 
 template <typename A>
-concept MyConcept = requires(A a, bool b) {
-  { a.one() } -> std::same_as<bool>;
-  a.two();
-  a.three(b);
+concept MyConcept = requires(A a, bool b)
+{
+    { a.one() } ->std::same_as<bool>;
+    a.two();
+    a.three(b);
 };
 
 struct SomeType {
-  bool one() { return true; }
-  void two() {}
-  void three(bool) {}
+    bool one()
+    {
+        return true;
+    }
+    void two() {}
+    void three(bool) {}
 };
 
-bool foo(MyConcept auto a) {
-  return a.one();
+bool foo(MyConcept auto a)
+{
+    return a.one();
 }
 
-void bar() {
-  foo(SomeType());
+void bar()
+{
+    foo(SomeType());
 }
 
-int main(){
+int main()
+{
     return 0;
 }

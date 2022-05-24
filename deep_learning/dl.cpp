@@ -9,26 +9,13 @@
 #include "layer_utils.hpp"
 #include "sequential.hpp"
 
-int actualMain();
-
-template <typename Derived>
-void printSize(const Eigen::MatrixBase<Derived>& b) // EigenBase instead of MatrixBase works as well
-{
-    std::cout << "size; (rows, cols): " << b.size() << "; (" << b.rows() << ", " << b.cols() << ")" << std::endl;
-}
-
-// int main(){
-
-// }
-
 /**
- * @brief How to use the framework
+ ** Usage of my framework
  *
  * input = torch.randn(3, 5, requires_grad=True)
  * target = torch.randint(5, (3,), dtype=torch.int64)
  * loss = F.cross_entropy(input, target)
  * loss.backward()
- * @param bias
  */
 int main()
 {

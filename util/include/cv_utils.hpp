@@ -6,6 +6,10 @@
 #include <iostream>
 
 #include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/quality/qualitymse.hpp>
 
 namespace rmg
 {
@@ -24,11 +28,36 @@ void printType(const cv::Mat& mat)
         case CV_32S: rv = "32S";  expl = "Mat.at<int>(y,x)"; break; 
         case CV_32F: rv = "32F";  expl = "Mat.at<float>(y,x)"; break; 
         case CV_64F: rv = "64F";  expl = "Mat.at<double>(y,x)"; break; 
-        default:     rv = "User"; expl = "Mat.at<UKNOWN>(y,x)"; break; 
+        default:     rv = "User"; expl = "Mat.at<UNKNOWN>(y,x)"; break; 
     }
     rv += "C";
     rv += (chans + '0');
     std::cout << "Mat is of type " << rv << " and should be accessed with " << expl << std::endl;
+}
+
+cv::Mat readImg(const std::string& path)
+{
+    const std::string imagePath = cv::samples::findFile(path);
+    const cv::Mat img = cv::imread(imagePath); // CV_8UC3
+    if (img.empty()) std::cerr << "Could not read the image: " << imagePath << std::endl;
+
+    return img;
+}
+
+//TODO: implement concepts for this + maybe modify it
+template<class Array>
+static void displayPoints(cv::Mat img, Array arr)
+{
+    for (int i = 0; i < arr.size(); ++i) {
+        int x = arr[x][0];
+        int y = arr[i][1];
+        cv::circle(img, cv::Point{x, y}, 1, cv::Scalar{0, 0, 255}, 5);
+    }
+
+    cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE); // Create Window
+    cv::imshow("Display window", img);
+
+    int k = cv::waitKey(0); // Wait for a keystroke in the window
 }
 } // namespace rmg
 
