@@ -8,6 +8,7 @@
 #include <random>
 
 namespace po = boost::program_options;
+using FaceLandmarksDataset = torch::data::datasets::FaceLandmarksDataset;
 
 /******************************************************************************************************************
  **                                Facial Keypoints Detection
@@ -49,6 +50,15 @@ auto test(KeypointsModel& model, DataLoader& dataLoader, size_t datasetSize)
         auto loss = torch::mse_loss(output, batch.target); //
         AT_ASSERT(!std::isnan(loss.template item<float>()));
         testLoss += loss.template item<float>();
+        size_t idx = 0;
+        for (int i = 0; i < batch.data.size(0); ++i) {
+            if (idx++ % 50 == 0) {
+                FaceLandmarksDataset::displayKeyPoints(batch.data[i].view({FaceLandmarksDataset::ImageRows,
+                                                                           FaceLandmarksDataset::ImageColumns,
+                                                                           FaceLandmarksDataset::ImageChannels}),
+                                                       output[i]);
+            }
+        }
     }
 
     testLoss /= datasetSize;
@@ -61,9 +71,15 @@ int main(int argc, char** argv)
 {
     po::options_description desc("Program options");
 
+    // TODO: add following commands for training: test_size, train_size, epochs, grid search, random search
+    // TODO: add following commands for training: test_size, train_size, log_interval, epochs, number of images to
+    // display!!
+    // TODO: add following commands for loading: test_size, log_interval, number of images to display, image, to
+    // display a single image!!
     desc.add_options()("help, h", "print info")("tune", "parameter tuning")("train, t", "train model")(
                 "results, r", "show results")("display, d", "display initial images")(
-                "learning-rate, lr", "learning rate")("load", po::value<std::string>(), "load model");
+                "learning-rate, lr", "learning rate")("load", po::value<std::string>(), "load model")(
+                "image", po::value<std::string>(), "pass only one image to the model to calculate the facial keypoints");
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
@@ -75,9 +91,9 @@ int main(int argc, char** argv)
     }
 
     const char* DataRoot = "./facial_keypoints_dataset";
-    constexpr std::size_t NumberOfEpochs = 10; // 20 epochs seems to be best; also 30 seem good
+    constexpr std::size_t NumberOfEpochs = 50; // around 40 epochs seems to be good
     constexpr std::size_t LogInterval = 10;
-    constexpr std::size_t TrainDatasetSize = 200;
+    constexpr std::size_t TrainDatasetSize = 4800;
     constexpr std::size_t TestDatasetSize = 200;
 
     //************Hyperparameter Tuning **************************//
@@ -87,10 +103,12 @@ int main(int argc, char** argv)
         std::mt19937 mt(rd());
         std::uniform_real_distribution dist(0.1, 0.0001);
 
-        // auto learningRates = rmg::linspace(0.1, 0.0001, 50);
         std::vector<double> learningRates;
         for (int i = 0; i < 50; ++i) learningRates.push_back(dist(mt));
         assert(learningRates.size() == 50);
+
+        // TODO: command line arguments to do a grid search
+        // auto learningRates = rmg::linspace(0.1, 0.0001, 50);
 
         double bestLearningRate = 0;
         double smallestLoss = {INFINITY};
@@ -145,10 +163,8 @@ int main(int argc, char** argv)
         std::printf("Best learning rate found: %.4f\n", bestLearningRate);
     }
 
-
     constexpr std::size_t TrainBatchSize = 64;
     constexpr std::size_t TestBatchSize = 200;
-    using FaceLandmarksDataset = torch::data::datasets::FaceLandmarksDataset;
     //******************** Train Model ******************************//
     if (vm.count("train")) {
         std::cout << "Model training started" << std::endl;
@@ -168,6 +184,7 @@ int main(int argc, char** argv)
                                                                                        .workers(2)
                                                                                        .enforce_ordering(false));
 
+        // TODO: implement command line argument to display images
         // for (torch::data::Example<>& batch : *trainDataLoader) {
         //     std::cout << "Batch size: " << batch.data.size(0) << " | Image: ";
         //     for (int64_t i = 0; i < batch.data.size(0); ++i) {
@@ -194,14 +211,17 @@ int main(int argc, char** argv)
         // torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(0.01).momentum(0.5));
         // ptimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-6, nesterov=True
         // torch::optim::Adam optimizer(model->parameters(), /*lr*/ 0.001);
-        // torch::optim::AdamWOptions().lr(0.001).weight_decay(1e-2)); torch::optim::AdamW
-        // optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.0001).weight_decay(1e-5));
+        // torch::optim::AdamWOptions().lr(0.001).weight_decay(1e-2));
+        // torch::optim::AdamW optimizer(model->parameters(),
+        // torch::optim::AdamWOptions().lr(0.0001).weight_decay(1e-5));
 
         // auto model = KeypointsModel();
         KeypointsModel model;
 
-        // torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions().lr(0.05).weight_decay(1e-2));
-        torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions().lr(0.0642).weight_decay(1e-2));
+        // torch::optim::AdamW optimizer(model->parameters(),
+        // torch::optim::AdamWOptions().lr(0.05).weight_decay(1e-2));
+        torch::optim::AdamW optimizer(model.parameters(),
+                                      torch::optim::AdamWOptions().lr(0.0642).weight_decay(1e-2));
 
         train(NumberOfEpochs, model, trainDataLoader, optimizer, trainDatasetSize, LogInterval);
 
@@ -221,7 +241,7 @@ int main(int argc, char** argv)
                 }
             }
         }
-        //!NOT WORKING!!!
+        //! NOT WORKING!!!
         // torch::save(model, "KeyPointsModel.pt");
 
         const std::string modelPath = "KeyPointsModel.pt";
@@ -232,49 +252,49 @@ int main(int argc, char** argv)
 
     if (vm.count("load")) {
         std::cout << "Loading module: " << vm["load"].as<std::string>() << std::endl;
-        // torch::jit::script::Module module;
-        // try {
-        //     // Deserialize the ScriptModule from a file using torch::jit::load().
-        //     module = torch::jit::load(vm["load"].as<std::string>());
-        // } catch (const c10::Error& e) {
-        //     std::cerr << "error loading the model\n";
-        //     return -1;
-        // }
-        // auto module = torch::jit::load(vm["load"].as<std::string>());
         KeypointsModel model;
-        std::ifstream file(vm["load"].as<std::string>());
-        torch::serialize::InputArchive inputArchive;
-        inputArchive.load_from(file);
-        model.load(inputArchive);
+        try {
+            std::ifstream file(vm["load"].as<std::string>());
+            torch::serialize::InputArchive inputArchive;
+            inputArchive.load_from(file);
+            model.load(inputArchive);
+        } catch (const c10::Error& e) {
+            std::cerr << "error loading the model\n" << e.what();
+            return -1;
+        } catch (const std::exception& e) {
+            std::cerr << "error loading the model\n" << e.what();
+            return -1;
+        } catch (...) {
+            std::cerr << "error loading the model\n";
+            return -1;
+        }
         model.eval();
 
-        auto testDataset = torch::data::datasets::FaceLandmarksDataset(
-                                       DataRoot, torch::data::datasets::FaceLandmarksDataset::Mode::Test,
-                                       TrainDatasetSize, TestDatasetSize)
-                                       .map(torch::data::transforms::Stack<>());
+        if (!vm.count("image")) {
+            auto testDataset = FaceLandmarksDataset(DataRoot, FaceLandmarksDataset::Mode::Test, TrainDatasetSize,
+                                                    TestDatasetSize)
+                                           .map(torch::data::transforms::Stack<>());
 
-        const size_t testDatasetSize = testDataset.size().value();
-        DEB(testDatasetSize);
-        auto testDataLoader = torch::data::make_data_loader(std::move(testDataset), TestBatchSize);
+            const size_t TestDatasetSize = testDataset.size().value();
+            DEB(TestDatasetSize);
+            auto testDataLoader = torch::data::make_data_loader(std::move(testDataset), TestBatchSize);
 
-        //******************** Display Results / Test Performance ******************************//
-        for (torch::data::Example<>& batch : *testDataLoader) {
-            // auto data = batch.data.to(device), targets = batch.target.to(device);
-            // std::vector<torch::jit::IValue> inputs;
-            // inputs.push_back(batch.data);
+            //******************** Display Results / Test Performance ******************************//
+            auto loss = test(model, testDataLoader, TestDatasetSize);
 
-            auto output = model.forward({batch.data});
-            // torch::jit::Stack output = model.forward({batch.data}).toTuple()->elements();
-            size_t idx = 0;
-            for (int i = 0; i < batch.data.size(0); ++i) {
-                if (idx++ % 50 == 0) {
-                    FaceLandmarksDataset::displayKeyPoints(
-                                batch.data[i].view({FaceLandmarksDataset::ImageRows,
-                                                    FaceLandmarksDataset::ImageColumns,
-                                                    FaceLandmarksDataset::ImageChannels}),
-                                output[i]);
-                }
-            }
+            std::printf("Loss: %.4f\n", loss);
+        }
+
+        if (vm.count("image")) {
+            torch::Tensor img = FaceLandmarksDataset::getImgData(vm["image"].as<std::string>());
+            img = torch::unsqueeze(img, 0);
+
+            auto output = model.forward(img);
+
+            FaceLandmarksDataset::displayKeyPoints(
+                        img.view({FaceLandmarksDataset::ImageRows, FaceLandmarksDataset::ImageColumns,
+                                  FaceLandmarksDataset::ImageChannels}),
+                        output[0]);
         }
     }
     return 0;

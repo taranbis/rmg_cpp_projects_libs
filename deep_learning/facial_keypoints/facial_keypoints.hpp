@@ -23,20 +23,6 @@
 
 namespace torch::data::datasets
 {
-namespace
-{
-bool check_is_little_endian()
-{
-    const uint32_t word = 1;
-    return reinterpret_cast<const uint8_t*>(&word)[0] == 1;
-}
-
-constexpr uint32_t flip_endianness(uint32_t value)
-{
-    return ((value & 0xffu) << 24u) | ((value & 0xff00u) << 8u) | ((value & 0xff0000u) >> 8u) |
-           ((value & 0xff000000u) >> 24u);
-}
-} // namespace
 
 class FaceLandmarksDataset : public torch::data::datasets::Dataset<FaceLandmarksDataset>
 {
@@ -109,7 +95,6 @@ private:
     {
         const auto count = train ? TrainSize : TestSize;
 
-        // Tensor rv = torch::empty({count, ImageRows * ImageColumns * ImageChannels}, torch::kByte);
         Tensor rv = torch::empty({count, ImageChannels, ImageRows, ImageColumns}, torch::kFloat32);
 
         const auto path = joinPaths(root, "all_data.json");
@@ -117,9 +102,6 @@ private:
         std::ifstream jsonFile(path);
         nlohmann::json j;
         jsonFile >> j;
-
-        // // images.read(reinterpret_cast<char*>(tensor.data_ptr()), tensor.numel());
-        // return tensor.to(torch::kFloat32).div_(255);
 
         // uchar* buffer = new uchar[img.rows * img.cols * img.channels()];
         // memcpy(img.data, buffer, img.rows * img.cols * img.channels());
@@ -143,19 +125,11 @@ private:
         std::ifstream jsonFile(path);
         nlohmann::json json;
         jsonFile >> json;
-        // std::cout << std::setw(4) << j << std::endl;
 
         Tensor rv = torch::empty({count, 68 * 2}, torch::kFloat32);
 
-        // TODO:remove
-        // Tensor images = torch::empty({count, 786432}, torch::kByte);
-
         for (int j = 0; j < count; ++j) {
             nlohmann::json faceLandmarks = json.at(std::to_string(j)).at("face_landmarks");
-
-            // //TODO:remove
-            // const auto imgPath = joinPaths(imagesPath, json.at(std::to_string(j)).at("file_name"));
-            // images[j] = getImgData(imgPath);
 
             for (int i = 0; i < faceLandmarks.size(); ++i) {
                 int x = faceLandmarks[i][0];
@@ -166,13 +140,11 @@ private:
             }
         }
 
-        // for (int j = 0; j < count; ++j) displayKeyPointsTorch(images[j].view({FaceLandmarksDataset::ImageRows, FaceLandmarksDataset::ImageColumns, FaceLandmarksDataset::ImageChannels}), rv[j]);
-
         DEB(rv.sizes());
         return rv;
     }
-
-    Tensor getImgData(const std::string& path)
+public:
+    static Tensor getImgData(const std::string& path)
     {
         // cv::Mat img = rmg::readImg(path);
         const std::string imagePath = cv::samples::findFile(path);
@@ -194,7 +166,6 @@ private:
         // return tensor.flatten();
     };
 
-public:
     static void displayKeyPoints(Tensor tensor, Tensor faceLandmarks)
     {
         tensor = tensor.mul(255);
@@ -219,25 +190,3 @@ public:
 } // namespace torch::data::datasets
 
 #endif
-
-//* Read big file
-//     // Buffer size 1 Megabyte (or any number you like)
-//     size_t buffer_size = 1 << 20;
-//     char* buffer = new char[buffer_size];
-
-//     // std::ifstream jsonFile("./all_data.json");
-
-//     while (jsonFile) {
-//         // Try to read next chunk of data
-//         jsonFile.read(buffer, buffer_size);
-//         // Get the number of bytes actually read
-//         size_t count = jsonFile.gcount();
-//         // If nothing has been read, break
-//         if (!count) break;
-//         // Do whatever you need with first count bytes in the buffer
-//         for(int i = 0; i < count; ++i){
-//             std::cout<<buffer[i]<<std::endl;
-//         }
-//     }
-
-//     delete[] buffer;
